@@ -1,0 +1,24 @@
+{
+  "name": "Pause4Paws Dubai",
+  "short_name": "Pause4Paws",
+  "description": "Dubai community pet map — report missing pets, log sightings, reunite animals",
+  "start_url": "/pause4paws/",
+  "display": "standalone",
+  "background_color": "#EA580C",
+  "theme_color": "#EA580C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
