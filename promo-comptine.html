@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pause4Paws — Dubai Pet Community</title>
+<meta name="description" content="The app that replaces your community WhatsApp group. One live map for every missing pet in your area.">
+<meta property="og:title" content="Pause4Paws — Dubai Pet Community">
+<meta property="og:description" content="Your community cares. Let them know. Try free for 48 hours.">
+<meta property="og:image" content="icon.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:#0A0A0A;font-family:'Helvetica Neue',Arial,sans-serif;overflow:hidden;}
+.wrap{width:100%;height:100%;max-width:430px;margin:0 auto;position:relative;background:#0A0A0A;overflow:hidden;}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 28px;opacity:0;transition:opacity 0.55s ease;pointer-events:none;}
+.scene.active{opacity:1;pointer-events:all;}
+/* S1 */
+.s1{background:#0A0A0A;justify-content:center;}
+.s1-time{font-size:80px;font-weight:900;color:white;letter-spacing:-3px;margin-bottom:2px;}
+.s1-ampm{font-size:20px;color:#444;margin-bottom:32px;}
+.s1-line{font-size:18px;color:#666;line-height:1.7;margin-bottom:4px;opacity:0;transform:translateY(12px);transition:all 0.55s ease;}
+.s1-line.in{opacity:1;transform:translateY(0);}
+.s1-line strong{color:#DDD;}
+.s1-line.red{color:#FF6060;font-weight:600;}
+/* S2 */
+.s2{background:#0F0F0F;justify-content:flex-start;padding-top:60px;}
+.s2-lbl{font-size:11px;font-weight:800;color:#EA580C;letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px;text-align:center;width:100%;}
+.cb{margin-bottom:11px;display:flex;flex-direction:column;}
+.cb.r{align-items:flex-end;}
+.cbb{background:#1C1C1C;border-radius:14px;border-top-left-radius:3px;padding:10px 13px;max-width:84%;}
+.cb.r .cbb{background:#0C2318;border-top-left-radius:14px;border-top-right-radius:3px;}
+.cbt{font-size:13px;color:#DDD;line-height:1.5;}
+.cbt2{font-size:10px;color:#444;margin-top:3px;text-align:right;}
+.s2v{width:100%;background:#130606;border:1px solid #280808;border-radius:12px;padding:12px;text-align:center;margin-top:8px;}
+.s2v p{font-size:14px;color:#FF6060;font-weight:700;line-height:1.5;}
+/* S3 */
+.s3{background:#EA580C;}
+.s3i{font-size:80px;margin-bottom:6px;}
+.s3n{font-size:46px;font-weight:900;color:white;letter-spacing:-1.5px;margin-bottom:5px;}
+.s3t{font-size:11px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.15em;font-weight:700;margin-bottom:18px;}
+.s3d{width:36px;height:3px;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:18px;}
+.s3h{font-size:20px;color:white;text-align:center;line-height:1.6;font-weight:600;}
+/* S4 */
+.s4{background:#F4EFE7;justify-content:flex-start;padding-top:36px;}
+.ph{width:180px;height:285px;background:#1C1C1E;border-radius:28px;border:3px solid #2A2A2A;overflow:hidden;position:relative;margin-bottom:18px;flex-shrink:0;}
+.mb{position:absolute;inset:0;background:#EDE5D0;}
+.mr{position:absolute;background:#FFF5EC;}
+.mc{position:absolute;background:#C2410C;color:white;font-size:6.5px;font-weight:800;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+.mpin{position:absolute;border-radius:50%;background:#DC2626;width:12px;height:12px;animation:mpp 1.5s infinite;}
+@keyframes mpp{0%{box-shadow:0 0 0 0 rgba(220,38,38,.7)}70%{box-shadow:0 0 0 9px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+.mt{position:absolute;top:0;left:0;right:0;height:32px;background:rgba(255,255,255,.96);display:flex;align-items:center;padding:0 8px;z-index:5;}
+.mbs{position:absolute;top:33px;left:0;right:0;display:flex;gap:3px;padding:3px 5px;z-index:5;}
+.mbtn{border-radius:10px;padding:3px 5px;font-size:6px;font-weight:800;color:white;flex:1;text-align:center;}
+.s4t{font-size:22px;font-weight:900;color:#1C1C1E;text-align:center;margin-bottom:6px;}
+.s4s{font-size:14px;color:#666;text-align:center;line-height:1.6;}
+/* S5 */
+.s5{background:#0A0A0A;justify-content:flex-start;padding-top:50px;}
+.s5h{font-size:26px;font-weight:900;color:white;text-align:center;line-height:1.2;margin-bottom:22px;}
+.s5h span{color:#EA580C;}
+.fr{display:flex;align-items:center;gap:12px;margin-bottom:14px;width:100%;opacity:0;transform:translateY(14px);transition:all .4s ease;}
+.fr.in{opacity:1;transform:translateY(0);}
+.fi{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:#181818;}
+.fn{font-size:15px;font-weight:800;color:white;}
+.fd{font-size:12px;color:#555;margin-top:1px;}
+/* S6 */
+.s6{background:#F4EFE7;}
+.pc{background:white;border-radius:18px;overflow:hidden;width:100%;max-width:272px;box-shadow:0 12px 40px rgba(0,0,0,.12);}
+.pcp{height:164px;background:linear-gradient(135deg,#FED7AA,#EA580C);display:flex;align-items:center;justify-content:center;font-size:68px;}
+.pcb{padding:14px 16px;}
+.pcs{display:inline-block;background:#FEE2E2;color:#DC2626;font-size:9px;font-weight:900;padding:3px 10px;border-radius:50px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.pcn{font-size:22px;font-weight:900;color:#1C1C1E;margin-bottom:2px;}
+.pci{font-size:12px;color:#999;margin-bottom:6px;}
+.pcl{font-size:12px;color:#EA580C;font-weight:800;margin-bottom:10px;}
+.pcw{background:#25D366;color:white;border-radius:9px;padding:9px;text-align:center;font-size:12px;font-weight:800;}
+.s6c{font-size:16px;color:#555;text-align:center;margin-top:14px;line-height:1.7;max-width:270px;font-style:italic;}
+/* S7 */
+.s7{background:#0A0A0A;}
+.s7i{font-size:48px;margin-bottom:14px;}
+.s7p{font-size:11px;font-weight:800;color:#EA580C;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;}
+.s7b{font-size:28px;font-weight:900;color:white;text-align:center;line-height:1.25;margin-bottom:10px;}
+.s7m{font-size:15px;color:#777;text-align:center;line-height:1.7;margin-bottom:18px;}
+.s7tr{background:#0D1A0D;border:1px solid #1A3A1A;border-radius:12px;padding:12px 20px;text-align:center;margin-bottom:14px;width:100%;}
+.s7trb{font-size:22px;font-weight:900;color:#4ADE80;margin-bottom:2px;}
+.s7trs{font-size:12px;color:#3A6A3A;}
+.s7pr{background:#EA580C;color:white;border-radius:50px;padding:14px 32px;font-size:17px;font-weight:900;margin-bottom:10px;text-align:center;}
+.s7lk{font-size:12px;color:#444;text-align:center;margin-bottom:5px;}
+.s7hw{font-size:11px;color:#444;text-align:center;line-height:1.7;}
+/* Progress */
+.prog{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08);}
+.progr{height:100%;background:#EA580C;transition:width .08s linear;}
+.dots{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:center;gap:3px;padding:0 20px;z-index:50;}
+.dot{height:2.5px;flex:1;border-radius:2px;background:rgba(255,255,255,.2);}
+.dot.done{background:rgba(255,255,255,.5);}
+.dot.active{background:#EA580C;}
+.btm{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 16px;z-index:50;}
+.btm span{font-size:10px;color:rgba(255,255,255,.2);}
+/* CTA bottom */
+.cta-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,10,.95);backdrop-filter:blur(10px);padding:14px 20px 28px;z-index:200;display:none;flex-direction:column;align-items:center;gap:10px;}
+.cta-bar.show{display:flex;}
+.cta-main{background:#EA580C;color:white;border:none;border-radius:50px;padding:16px 32px;font-size:16px;font-weight:900;width:100%;cursor:pointer;font-family:inherit;text-decoration:none;display:block;text-align:center;}
+.cta-sec{font-size:12px;color:#555;text-align:center;line-height:1.6;}
+.cta-replay{background:transparent;color:#444;border:1px solid #222;border-radius:50px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap" onclick="advance()">
+  <div class="dots" id="dots"></div>
+
+  <div class="scene s1" id="sc0">
+    <div class="s1-time">11:47</div>
+    <div class="s1-ampm">PM</div>
+    <div class="s1-line" id="sl0">Your cat <strong>hasn't come home.</strong></div>
+    <div class="s1-line" id="sl1">You post in <strong>three WhatsApp groups.</strong></div>
+    <div class="s1-line" id="sl2">By morning — your message is lost between<br><strong>community notices and weekend updates.</strong></div>
+    <div class="s1-line red" id="sl3">Your pet is still out there.</div>
+  </div>
+
+  <div class="scene s2" id="sc1">
+    <div class="s2-lbl">Sound familiar?</div>
+    <div class="cb"><div class="cbb"><div class="cbt">Has anyone seen a grey cat near the lake? 😢 missing since last night</div><div class="cbt2">Mon 11:52pm</div></div></div>
+    <div class="cb"><div class="cbb"><div class="cbt">Community reminder: pool maintenance Thurs 9am</div><div class="cbt2">Tue 7:30am</div></div></div>
+    <div class="cb"><div class="cbb"><div class="cbt">Lost dog — black lab — last seen near the park</div><div class="cbt2">Tue 2:14pm</div></div></div>
+    <div class="cb"><div class="cbb"><div class="cbt">Reminder: bins out tonight! Gate code changed to 4821</div><div class="cbt2">Tue 6:45pm</div></div></div>
+    <div class="cb r"><div class="cbb"><div class="cbt">Still no sign of her… day 3 😭 please keep an eye out</div><div class="cbt2">Thu 10:05am</div></div></div>
+    <div class="s2v"><p>Important things get overlooked.<br>Every single time.</p></div>
+  </div>
+
+  <div class="scene s3" id="sc2">
+    <div class="s3i">🐾</div>
+    <div class="s3n">Pause4Paws</div>
+    <div class="s3t">Dubai Pet Community</div>
+    <div class="s3d"></div>
+    <div class="s3h">What if your whole community<br>could see it. Instantly.<br>On one live map.</div>
+  </div>
+
+  <div class="scene s4" id="sc3">
+    <div class="ph">
+      <div class="mb"></div>
+      <div class="mr" style="top:52px;left:0;right:0;height:15px;"></div>
+      <div class="mr" style="top:115px;left:0;right:0;height:11px;"></div>
+      <div class="mr" style="top:160px;left:0;right:0;height:11px;"></div>
+      <div class="mr" style="top:0;bottom:0;left:76px;width:13px;"></div>
+      <div class="mc" style="top:58px;left:5px;">Basswood</div>
+      <div class="mc" style="top:58px;left:84px;">Victoria</div>
+      <div class="mc" style="top:122px;left:32px;">Mimosa</div>
+      <div class="mc" style="top:166px;left:88px;">Vardon</div>
+      <div class="mpin" style="top:68px;left:94px;"></div>
+      <div class="mt"><span style="font-size:8px;font-weight:900;color:#EA580C;">Pause4Paws</span><span style="font-size:7px;color:#888;margin-left:auto;">Damac Hills 2</span></div>
+      <div class="mbs"><div class="mbtn" style="background:#CC0000;">Report Missing</div><div class="mbtn" style="background:#16A34A;">Log Sighting</div></div>
+    </div>
+    <div class="s4t">One live map. One community.</div>
+    <div class="s4s">Every missing pet pinned to the exact street.<br>Active reports — nothing disappears.</div>
+  </div>
+
+  <div class="scene s5" id="sc4">
+    <div class="s5h">Everything your<br><span>WhatsApp can't do.</span></div>
+    <div class="fr" id="fr0"><div class="fi">📍</div><div><div class="fn">Exact location pinned</div><div class="fd">Down to the street cluster</div></div></div>
+    <div class="fr" id="fr1"><div class="fi">📸</div><div><div class="fn">Photo-first reports</div><div class="fd">AI fills breed, colour and size</div></div></div>
+    <div class="fr" id="fr2"><div class="fi">🔔</div><div><div class="fn">Instant WhatsApp alerts</div><div class="fd">Straight to opted-in neighbours</div></div></div>
+    <div class="fr" id="fr3"><div class="fi">🗺️</div><div><div class="fn">Active reports, always visible</div><div class="fd">Nothing gets overlooked</div></div></div>
+    <div class="fr" id="fr4"><div class="fi">⭐</div><div><div class="fn">Feature your missing pet</div><div class="fd">Pinned top — maximum visibility</div></div></div>
+  </div>
+
+  <div class="scene s6" id="sc5">
+    <div class="pc">
+      <div class="pcp">🐈</div>
+      <div class="pcb">
+        <div class="pcs">Missing</div>
+        <div class="pcn">Mango</div>
+        <div class="pci">Orange tabby · Male · Medium</div>
+        <div class="pcl">📍 Victoria · Damac Hills 2</div>
+        <div class="pcw">📲 Share with community</div>
+      </div>
+    </div>
+    <div class="s6c">"Every pet deserves to be seen —<br>not overlooked, not forgotten."</div>
+  </div>
+
+  <div class="scene s7" id="sc6">
+    <div class="s7i">🐾</div>
+    <div class="s7p">Your community cares</div>
+    <div class="s7b">Let them know.<br>So they can help.</div>
+    <div class="s7m">Post it once. Then go find them.<br>Pause4Paws keeps your community informed while you search.</div>
+    <div class="s7tr">
+      <div class="s7trb">48 hours free</div>
+      <div class="s7trs">Full access · No card required · Starts immediately</div>
+    </div>
+    <div class="s7pr">Try free — then 24 AED for life</div>
+    <div class="s7lk">pause4paws.github.io/pause4paws</div>
+    <div class="s7hw">Open in Safari or Chrome · Tap Share · Add to Home Screen</div>
+  </div>
+
+  <div class="prog"><div class="progr" id="prog"></div></div>
+  <div class="btm"><span id="tapHint">tap to advance</span><span id="scNum">1 / 7</span></div>
+
+  <div class="cta-bar" id="ctaBar" onclick="event.stopPropagation()">
+    <a class="cta-main" href="https://pause4paws.github.io/pause4paws/" onclick="event.stopPropagation()">Try free for 48 hours →</a>
+    <div class="cta-sec">Open in Safari or Chrome · Add to Home Screen · No card needed</div>
+    <button class="cta-replay" onclick="restart()">Watch again</button>
+  </div>
+</div>
+<script>
+const N=7,DUR=[5500,5500,4500,5000,6000,5000,6500];
+let cur=0,pt=null,pp=null,pg=0;
+function buildDots(){const d=document.getElementById('dots');d.innerHTML='';for(let i=0;i<N;i++){const s=document.createElement('div');s.className='dot'+(i<cur?' done':i===cur?' active':'');d.appendChild(s);}}
+function show(n){
+  document.querySelectorAll('.scene').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.getElementById('scNum').textContent=(n+1)+' / '+N;
+  buildDots();
+  if(pt)clearTimeout(pt);if(pp)clearInterval(pp);
+  pg=0;document.getElementById('prog').style.width='0%';
+  if(n===0){['sl0','sl1','sl2','sl3'].forEach((id,i)=>setTimeout(()=>{const el=document.getElementById(id);if(el)el.classList.add('in');},500+i*900));}
+  if(n===4){['fr0','fr1','fr2','fr3','fr4'].forEach((id,i)=>setTimeout(()=>{const el=document.getElementById(id);if(el)el.classList.add('in');},200+i*320));}
+  pt=setTimeout(advance,DUR[n]);
+  const step=100/(DUR[n]/80);
+  pp=setInterval(()=>{pg=Math.min(100,pg+step);const el=document.getElementById('prog');if(el)el.style.width=pg+'%';if(pg>=100)clearInterval(pp);},80);
+}
+function advance(){
+  if(cur<N-1){cur++;show(cur);}
+  else{if(pt)clearTimeout(pt);if(pp)clearInterval(pp);document.getElementById('prog').style.width='100%';document.getElementById('ctaBar').classList.add('show');document.getElementById('tapHint').style.display='none';}
+}
+function restart(){cur=0;document.getElementById('ctaBar').classList.remove('show');document.getElementById('tapHint').style.display='';document.querySelectorAll('.s1-line').forEach(l=>l.classList.remove('in'));document.querySelectorAll('.fr').forEach(f=>f.classList.remove('in'));show(0);}
+show(0);
+</script>
+</body>
+</html>
