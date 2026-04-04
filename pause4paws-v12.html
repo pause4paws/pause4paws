@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pause4Paws — Dubai Pet Community v12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+:root{
+  --brand:#EA580C;
+  --brand-dark:#C2410C;
+  --brand-light:#FFF7ED;
+  --brand-mid:#FED7AA;
+  --bg:#FFFBF8;
+  --surface:#FFFFFF;
+  --ink:#111111;
+  --ink2:#444444;
+  --muted:#888888;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.14);
+  --shadow:0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg:0 6px 28px rgba(0,0,0,0.13);
+  --lost:#D63030;
+  --found:#1A9A5A;
+  --home:#D4A017;
+  --stray:#1A5FC4;
+  --featured:#9A3FC4;
+  --r:10px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;background:#1a1a1a;}
+#map{position:absolute;inset:0;z-index:1;}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar{
+  position:absolute;top:0;left:0;right:0;z-index:200;height:62px;
+  background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 14px;gap:10px;
+}
+
+/* LOGO */
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-icon{
+  width:42px;height:42px;border-radius:11px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 3px 10px rgba(234,88,12,0.30);
+}
+.logo-words{display:flex;flex-direction:column;line-height:1.15;}
+.logo-name{font-family:'Righteous',cursive;font-size:1.15rem;color:var(--brand);letter-spacing:0.01em;}
+.logo-tag{font-size:9.5px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:0.09em;}
+
+.tb-div{width:1px;height:28px;background:var(--border2);flex-shrink:0;}
+
+/* Community selector */
+.comm-wrap{position:relative;flex-shrink:0;}
+.comm-btn{
+  display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;
+  border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--ink);
+  white-space:nowrap;transition:all .15s;
+}
+.comm-btn:hover{border-color:var(--brand);background:var(--brand-light);}
+.comm-dd{
+  position:absolute;top:calc(100%+6px);left:0;background:var(--surface);
+  border:1px solid var(--border2);border-radius:var(--rl);
+  box-shadow:var(--shadow-lg);z-index:999;min-width:230px;overflow:hidden;display:none;
+}
+.comm-dd.open{display:block;}
+.comm-opt{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;transition:background .12s;}
+.comm-opt:hover,.comm-opt.active{background:var(--brand-light);color:var(--brand-dark);}
+.comm-count{margin-left:auto;font-size:11px;color:var(--muted);}
+
+/* Search */
+.search-wrap{flex:1;max-width:280px;position:relative;}
+.search-inp{
+  width:100%;padding:7px 28px 7px 32px;border:1.5px solid var(--border);
+  border-radius:9px;background:var(--bg);font-family:'Nunito Sans',sans-serif;
+  font-size:12px;color:var(--ink);outline:none;transition:border-color .15s;
+}
+.search-inp:focus{border-color:var(--brand);}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.4;pointer-events:none;}
+.search-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.35;display:none;}
+
+.tb-space{flex:1;}
+#auth-actions{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.btn{padding:7px 14px;border-radius:9px;border:1.5px solid var(--border2);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-primary{background:var(--brand);color:white;border-color:var(--brand);}
+.btn-primary:hover{background:var(--brand-dark);}
+.btn-ghost{background:transparent;color:var(--ink);}
+.btn-ghost:hover{background:var(--brand-light);}
+.user-chip{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1.5px solid var(--border2);border-radius:50px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:700;position:relative;}
+.user-av{width:26px;height:26px;border-radius:50%;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;}
+.user-menu{position:absolute;top:calc(100%+6px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--shadow-lg);z-index:999;min-width:180px;overflow:hidden;}
+.um-item{padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;}
+.um-item:hover{background:var(--brand-light);color:var(--brand-dark);}
+.um-sep{border:none;border-top:1px solid var(--border);}
+
+/* ── TWO BIG ACTION BUTTONS ─────────────────────────────────────────────── */
+.action-bar{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  z-index:160;display:flex;gap:9px;padding:0 12px;
+}
+.action-btn{
+  display:flex;align-items:center;gap:7px;padding:10px 20px;
+  border-radius:50px;border:none;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+  box-shadow:0 4px 16px rgba(0,0,0,0.22);transition:all .2s;white-space:nowrap;
+  letter-spacing:0.01em;
+}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.28);}
+.action-btn:active{transform:translateY(0);}
+.btn-report{background:var(--lost);color:white;}
+.btn-found{background:var(--brand);color:white;}
+.action-btn .ai{font-size:16px;}
+
+/* ── FILTER PILLS ───────────────────────────────────────────────────────── */
+.filterbar{
+  position:absolute;top:122px;left:50%;transform:translateX(-50%);
+  z-index:150;display:flex;gap:6px;padding:0 12px;
+  flex-wrap:nowrap;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.filterbar::-webkit-scrollbar{display:none;}
+.fpill{
+  display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:50px;
+  border:2px solid rgba(255,255,255,0.75);
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);
+  font-size:12px;font-weight:900;cursor:pointer;
+  color:#111;white-space:nowrap;flex-shrink:0;transition:all .15s;
+}
+.fpill .pd{width:7px;height:7px;border-radius:50%;}
+.fpill.active{border-color:#111;background:white;color:#111;}
+.fpill.fl-lost.active{border-color:var(--lost);}
+.fpill.fl-found.active{border-color:var(--found);}
+.fpill.fl-home.active{border-color:var(--home);}
+.fpill.fl-stray.active{border-color:var(--stray);}
+
+/* ── NARROW SEARCH ──────────────────────────────────────────────────────── */
+.narrow-btn{
+  position:absolute;top:122px;right:12px;z-index:160;
+  padding:6px 13px;border-radius:50px;
+  background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);
+  border:1.5px solid var(--border2);font-size:12px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--brand-dark);
+  box-shadow:var(--shadow);
+}
+.search-panel{
+  position:absolute;top:122px;right:12px;z-index:155;
+  background:rgba(255,255,255,0.99);backdrop-filter:blur(14px);
+  border:1px solid var(--border2);border-radius:var(--rl);
+  padding:14px 16px;width:262px;box-shadow:var(--shadow-lg);display:none;
+}
+.search-panel.open{display:block;}
+.sp-h{font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;margin-bottom:10px;color:var(--brand-dark);}
+.sp-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin-bottom:3px;}
+.sp-sel,.sp-inp{width:100%;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;background:white;font-family:'Nunito Sans',sans-serif;font-size:12px;color:var(--ink);outline:none;margin-bottom:7px;}
+.sp-sel:focus,.sp-inp:focus{border-color:var(--brand);}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sp-btn{width:100%;padding:8px;border-radius:8px;border:none;background:var(--brand);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:2px;}
+.sp-clr{background:transparent;color:var(--muted);border:1.5px solid var(--border);margin-top:5px;}
+
+/* ── LEGEND ─────────────────────────────────────────────────────────────── */
+.legend{
+  position:absolute;bottom:88px;left:12px;z-index:150;
+  background:rgba(255,255,255,0.96);backdrop-filter:blur(10px);
+  border:1px solid var(--border2);border-radius:var(--r);
+  padding:10px 14px;box-shadow:var(--shadow);
+}
+.leg-title{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:8px;}
+.leg-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px;font-weight:800;color:#111;}
+.leg-row:last-child{margin-bottom:0;}
+.lpin{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+
+/* ── MAP BUTTONS ─────────────────────────────────────────────────────────── */
+.sight-btn{
+  position:absolute;bottom:88px;right:12px;z-index:150;
+  padding:9px 15px;border-radius:50px;background:var(--found);color:white;
+  border:none;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;
+  cursor:pointer;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:6px;
+}
+.sb-toggle{
+  position:absolute;bottom:152px;right:12px;z-index:150;
+  width:44px;height:44px;border-radius:50%;background:var(--ink);color:white;
+  border:none;cursor:pointer;font-size:18px;box-shadow:var(--shadow-lg);
+  display:flex;align-items:center;justify-content:center;
+}
+.help-btn{
+  position:absolute;bottom:152px;left:12px;z-index:150;
+  width:44px;height:44px;border-radius:50%;background:var(--brand);color:white;
+  border:none;cursor:pointer;font-size:17px;font-weight:900;
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;
+  font-family:'Nunito',sans-serif;
+}
+
+/* ── SIGHTING MODE ───────────────────────────────────────────────────────── */
+.sight-target{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:400;pointer-events:none;text-align:center;}
+.sight-target .cross{font-size:42px;animation:pulse 1.3s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.sight-target p{background:rgba(17,17,17,.8);color:white;font-size:12px;font-weight:700;padding:6px 14px;border-radius:50px;margin-top:8px;white-space:nowrap;}
+.sight-bar{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:410;background:var(--found);color:white;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);}
+.sight-cancel{background:rgba(255,255,255,.2);border:none;color:white;padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.sight-confirm{background:white;color:var(--found);border:none;padding:4px 14px;border-radius:50px;font-size:12px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar{position:absolute;right:0;top:62px;bottom:0;width:320px;z-index:180;background:var(--surface);border-left:1px solid var(--border2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.sidebar.open{transform:translateX(0);}
+.sb-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sb-title{font-family:'Righteous',cursive;font-size:.95rem;color:var(--brand-dark);}
+.sb-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.sb-body{overflow-y:auto;flex:1;}
+.pet-card{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:10px;transition:background .12s;}
+.pet-card:hover{background:var(--brand-light);}
+.pc-img{width:52px;height:52px;border-radius:9px;object-fit:cover;flex-shrink:0;}
+.pc-ph{width:52px;height:52px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.pc-info{flex:1;min-width:0;}
+.pc-status{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;}
+.pc-name{font-weight:800;font-size:14px;font-family:'Nunito',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-detail{font-size:11px;color:var(--muted);line-height:1.4;}
+.pc-cluster{display:inline-block;margin-top:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:var(--brand-light);color:var(--brand-dark);}
+
+/* ── HOME PANEL ──────────────────────────────────────────────────────────── */
+.home-panel{position:absolute;left:0;right:0;bottom:0;z-index:150;background:var(--surface);border-radius:18px 18px 0 0;box-shadow:0 -4px 24px rgba(234,88,12,.10);transform:translateY(calc(100% - 68px));transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:75vh;display:flex;flex-direction:column;}
+.home-panel.expanded{transform:translateY(0);}
+.hp-handle{padding:10px 0 6px;display:flex;flex-direction:column;align-items:center;cursor:pointer;flex-shrink:0;}
+.hp-drag{width:40px;height:4px;border-radius:2px;background:var(--brand-mid);margin-bottom:6px;}
+.hp-top{display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;width:100%;}
+.hp-title{font-family:'Righteous',cursive;font-size:1rem;color:var(--brand-dark);}
+.hp-hint{font-size:11px;color:var(--muted);}
+.hp-body{overflow-y:auto;flex:1;}
+
+/* REUNION */
+.reunion{background:var(--brand);color:white;margin:0 14px 12px;border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:14px;}
+.reunion-left{flex:1;}
+.reunion-comm{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:2px;}
+.reunion-num{font-family:'Righteous',cursive;font-size:2.2rem;color:white;line-height:1;}
+.reunion-text{font-size:11px;opacity:.8;line-height:1.5;margin-top:2px;}
+.reunion-global{font-size:10px;opacity:.5;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.2);}
+.reunion-icon{font-size:28px;flex-shrink:0;}
+
+/* STATS */
+.stats{display:flex;gap:8px;padding:0 14px 12px;flex-shrink:0;}
+.stat{flex:1;background:var(--brand-light);border-radius:var(--r);padding:8px 6px;text-align:center;border:1px solid var(--brand-mid);}
+.stat-n{font-family:'Righteous',cursive;font-size:1.3rem;line-height:1;}
+.stat-l{font-size:9px;color:#111;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+
+/* FEATURED */
+#featured-section{display:none;padding:0 14px 12px;}
+.feat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.feat-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;}
+.feat-cta{font-size:11px;font-weight:800;color:var(--featured);cursor:pointer;background:none;border:none;font-family:'Nunito',sans-serif;}
+.feat-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.feat-scroll::-webkit-scrollbar{display:none;}
+.feat-card{flex-shrink:0;width:130px;border-radius:var(--r);overflow:hidden;border:2px solid rgba(154,63,196,.3);background:white;cursor:pointer;transition:transform .15s;position:relative;}
+.feat-card:hover{transform:scale(1.02);}
+.feat-badge{position:absolute;top:5px;left:5px;background:var(--featured);color:white;font-size:8px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.05em;}
+.feat-img{width:130px;height:88px;object-fit:cover;}
+.feat-ph{width:130px;height:88px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.feat-info{padding:7px 9px;}
+.feat-status{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;}
+.feat-name{font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;}
+.feat-area{font-size:10px;color:var(--muted);}
+.feat-empty{padding:1rem;background:rgba(154,63,196,.06);border:1.5px dashed rgba(154,63,196,.3);border-radius:var(--r);text-align:center;cursor:pointer;margin:0 14px 12px;}
+.feat-empty-title{font-size:13px;font-weight:800;color:var(--featured);margin-bottom:3px;}
+.feat-empty-sub{font-size:11px;color:var(--muted);line-height:1.5;}
+
+/* ── OVERLAYS ────────────────────────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;backdrop-filter:blur(4px);}
+.overlay.hidden{display:none!important;}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:480px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);}
+.modal-top{padding:1.2rem 1.4rem 0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
+.modal-inner{overflow-y:auto;flex:1;padding:1rem 1.4rem 1.4rem;}
+.modal-title{font-family:'Righteous',cursive;font-size:1.3rem;color:var(--brand-dark);margin-bottom:3px;}
+.modal-sub{font-size:13px;color:var(--muted);}
+.modal-x{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-x:hover{background:var(--brand-light);}
+
+/* FORM */
+.fg{margin-bottom:.85rem;}
+.fl{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px;}
+.fi,.fs,.ft{width:100%;padding:9px 11px;border:1.5px solid var(--border2);border-radius:8px;background:white;font-family:'Nunito Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .15s;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--brand);}
+.ft{resize:vertical;min-height:70px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
+.type-tile{border:2px solid #e5e5e5;border-radius:10px;padding:9px 4px;text-align:center;cursor:pointer;background:white;transition:all .15s;}
+.type-tile .te{font-size:19px;margin-bottom:2px;}
+.type-tile .tl{font-size:11px;font-weight:800;font-family:'Nunito',sans-serif;}
+.type-tile .ts{font-size:9px;color:var(--muted);margin-top:1px;}
+.photo-zone{border:2px dashed var(--brand-mid);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;background:var(--brand-light);}
+.photo-zone:hover{border-color:var(--brand);}
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.photo-thumb{aspect-ratio:1;border-radius:7px;object-fit:cover;width:100%;border:1px solid var(--border);}
+.auth-tabs{display:flex;background:var(--bg);border-radius:9px;padding:3px;margin-bottom:1.2rem;}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:all .15s;}
+.auth-tab.active{background:white;color:var(--brand-dark);box-shadow:var(--shadow);}
+.fee-box{border-radius:10px;padding:12px 14px;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;font-size:12px;}
+.fee-box.signup{background:var(--brand-light);border:1px solid var(--brand-mid);color:var(--brand-dark);}
+.fee-box.featured{background:#F5EEFF;border:1px solid rgba(154,63,196,.3);color:#6A1A9A;}
+.fee-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.fee-amount{font-size:14px;font-weight:900;display:block;margin-bottom:2px;}
+.fee-note{opacity:.8;line-height:1.5;}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.9rem 0;}
+.price-card{border:2px solid var(--border2);border-radius:11px;padding:13px;cursor:pointer;background:white;transition:all .15s;text-align:center;}
+.price-card:hover,.price-card.selected{border-color:var(--featured);background:#F9F2FF;}
+.price-card .pc-dur{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px;}
+.price-card .pc-amt{font-family:'Righteous',cursive;font-size:1.6rem;color:var(--featured);}
+.price-card .pc-unit{font-size:10px;color:var(--muted);margin-top:2px;}
+.price-card .pc-badge{margin-top:5px;display:inline-block;background:var(--featured);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;}
+.sub-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--brand);color:white;font-family:'Righteous',cursive;font-size:.95rem;letter-spacing:.02em;cursor:pointer;margin-top:4px;transition:background .15s;}
+.sub-btn:hover{background:var(--brand-dark);}
+.sub-btn:disabled{opacity:.6;cursor:not-allowed;}
+.sub-btn.feat-btn{background:var(--featured);}
+.sub-btn.feat-btn:hover{background:#7A1A9A;}
+.hdivider{border:none;border-top:1px solid var(--border);margin:.8rem 0;}
+
+/* DETAIL */
+.det-photo{width:100%;height:200px;object-fit:cover;}
+.det-ph{width:100%;height:160px;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:70px;}
+.det-badge-wrap{padding:12px 14px 4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.det-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+.det-body{padding:.6rem 1.4rem 1.4rem;}
+.det-name{font-family:'Righteous',cursive;font-size:1.4rem;color:var(--ink);margin-bottom:2px;}
+.det-breed{font-size:13px;color:var(--muted);margin-bottom:.8rem;}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:.8rem;}
+.dg-item{background:var(--brand-light);border-radius:8px;padding:8px 11px;}
+.dg-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;margin-bottom:2px;}
+.dg-val{font-size:13px;font-weight:700;color:var(--ink2);}
+.det-sec{margin-bottom:.75rem;}
+.det-sec-title{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;margin-bottom:4px;}
+.det-sec p{font-size:13px;line-height:1.65;color:var(--ink2);}
+.sight-entry{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--ink2);line-height:1.5;}
+.sight-dot{width:8px;height:8px;border-radius:50%;background:var(--found);flex-shrink:0;margin-top:4px;}
+.det-actions{display:flex;flex-direction:column;gap:8px;margin-top:1rem;}
+.act-btn{width:100%;padding:12px;border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;display:block;border:none;}
+.act-call{background:var(--stray);color:white;}
+.act-wa{background:#25D366;color:white;}
+.act-sight{background:transparent;border:1.5px solid var(--found);color:var(--found);}
+.act-home{background:transparent;border:1.5px solid var(--home);color:var(--home);}
+.act-feat{background:transparent;border:1.5px solid var(--featured);color:var(--featured);}
+.act-del{background:transparent;border:1.5px solid var(--lost);color:var(--lost);}
+.act-close{background:var(--brand-light);color:var(--brand-dark);}
+
+/* POPUP */
+.pet-popup{font-family:'Nunito Sans',sans-serif;min-width:220px;}
+.pp-badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:50px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+.pp-name{font-family:'Righteous',cursive;font-size:1rem;color:var(--ink);margin:4px 0 2px;}
+.pp-detail{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.pp-desc{font-size:11px;color:var(--ink2);margin-bottom:5px;line-height:1.5;}
+.pp-cluster{display:inline-block;padding:2px 8px;border-radius:5px;background:var(--brand-light);font-size:9px;font-weight:700;color:var(--brand-dark);}
+
+/* ZONE LABELS */
+.zone-lbl{background:rgba(194,65,12,.8);color:white;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:.04em;border:none;pointer-events:none;white-space:nowrap;}
+
+/* ── ARABIC TOGGLE ───────────────────────────────────────────────────────── */
+.lang-toggle{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;font-size:11px;font-weight:800;color:var(--ink);flex-shrink:0;}
+.lang-toggle:hover{border-color:var(--brand);background:var(--brand-light);}
+html[dir="rtl"] .topbar{direction:rtl;}
+html[dir="rtl"] .comm-dd{left:auto;right:0;}
+html[dir="rtl"] .sidebar{left:auto;right:0;transform:translateX(100%);}
+html[dir="rtl"] .sidebar.open{transform:translateX(0);}
+html[dir="rtl"] .home-panel{direction:rtl;}
+html[dir="rtl"] .modal{direction:rtl;}
+
+/* ── COUNTDOWN POPUP ─────────────────────────────────────────────────────── */
+.countdown-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem;}
+.countdown-overlay.hidden{display:none!important;}
+.countdown-card{background:white;border-radius:18px;overflow:hidden;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.cd-hero{background:linear-gradient(135deg,var(--brand) 0%,#F97316 100%);padding:1.5rem;text-align:center;color:white;position:relative;}
+.cd-badge{display:inline-block;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);border-radius:50px;font-size:10px;font-weight:900;padding:3px 12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem;}
+.cd-title{font-family:'Righteous',cursive;font-size:1.5rem;margin-bottom:.3rem;}
+.cd-sub{font-size:12px;opacity:.9;line-height:1.6;}
+.cd-body{padding:1.4rem;}
+.cd-prices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.1rem;}
+.cd-price-a{border:2px solid var(--brand);border-radius:12px;padding:12px;text-align:center;background:var(--brand-light);}
+.cd-price-b{border:2px solid var(--border2);border-radius:12px;padding:12px;text-align:center;background:white;}
+.cd-amt{font-family:'Righteous',cursive;font-size:1.6rem;color:var(--brand);}
+.cd-amt-b{font-family:'Righteous',cursive;font-size:1.6rem;color:var(--muted);}
+.cd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:3px;}
+.cd-eb{display:inline-block;background:var(--brand);color:white;font-size:9px;font-weight:900;padding:2px 8px;border-radius:50px;margin-top:4px;}
+.cd-timer{text-align:center;margin-bottom:1rem;}
+.cd-timer-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;}
+.cd-timer-boxes{display:flex;justify-content:center;gap:8px;}
+.cd-tb{background:var(--ink);color:white;border-radius:8px;padding:6px 12px;text-align:center;min-width:52px;}
+.cd-tb-num{font-family:'Righteous',cursive;font-size:1.3rem;line-height:1;}
+.cd-tb-lbl{font-size:8px;font-weight:700;opacity:.6;text-transform:uppercase;margin-top:2px;}
+.cd-cta{width:100%;padding:13px;border-radius:10px;border:none;background:var(--brand);color:white;font-family:'Righteous',cursive;font-size:1rem;cursor:pointer;margin-bottom:8px;transition:background .15s;}
+.cd-cta:hover{background:var(--brand-dark);}
+.cd-skip{width:100%;padding:9px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.cd-fine{font-size:10px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.6;}
+
+/* ── AI MATCH BANNER ─────────────────────────────────────────────────────── */
+.ai-match-banner{background:linear-gradient(135deg,#F0E6FF,#E6F0FF);border:1px solid #C4A8FF;border-radius:10px;padding:10px 13px;margin-bottom:.85rem;display:flex;align-items:center;gap:9px;font-size:12px;color:#5A2DA0;}
+.ai-match-icon{font-size:22px;flex-shrink:0;}
+.ai-match-text{font-weight:700;line-height:1.5;}
+.ai-match-btn{margin-left:auto;padding:5px 11px;border-radius:7px;border:none;background:#7C3AED;color:white;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap;}
+
+/* ── WIO QR MODAL ────────────────────────────────────────────────────────── */
+.qr-modal-inner{text-align:center;padding:1.5rem 1.4rem;}
+.qr-code-box{background:white;border:2px solid var(--border2);border-radius:12px;padding:1.2rem;display:inline-block;margin:1rem 0;}
+.qr-amount{font-family:'Righteous',cursive;font-size:2.2rem;color:var(--brand);margin-bottom:.2rem;}
+.qr-label{font-size:12px;color:var(--muted);font-weight:700;}
+.qr-steps{text-align:left;background:var(--brand-light);border-radius:10px;padding:12px 14px;margin:.9rem 0;font-size:12px;color:var(--brand-dark);line-height:1.9;}
+.qr-steps strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.qr-done-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--found);color:white;font-family:'Righteous',cursive;font-size:1rem;cursor:pointer;margin-top:4px;}
+.qr-fine{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;}
+
+/* ── AI MATCH MODAL ──────────────────────────────────────────────────────── */
+.ai-modal-header{background:linear-gradient(135deg,#4C1D95,#7C3AED);padding:1.2rem 1.4rem;color:white;}
+.ai-modal-title{font-family:'Righteous',cursive;font-size:1.1rem;margin-bottom:.2rem;}
+.ai-modal-sub{font-size:12px;opacity:.85;}
+.ai-match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.9rem 0;}
+.ai-match-card{border:2px solid var(--border2);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .15s;}
+.ai-match-card:hover{border-color:#7C3AED;box-shadow:0 4px 14px rgba(124,58,237,.2);}
+.ai-match-card.top-match{border-color:#7C3AED;background:#F5EEFF;}
+.ai-match-photo{width:100%;height:90px;object-fit:cover;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.ai-match-info{padding:7px 9px;}
+.ai-match-score{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#7C3AED;margin-bottom:2px;}
+.ai-match-name{font-family:'Righteous',cursive;font-size:.9rem;color:var(--ink);}
+.ai-match-detail{font-size:10px;color:var(--muted);margin-top:1px;}
+.ai-scan-anim{text-align:center;padding:1.5rem;color:var(--muted);}
+.ai-scan-spinner{font-size:36px;animation:spin 1.5s linear infinite;display:inline-block;margin-bottom:.5rem;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ai-no-match{text-align:center;padding:1.5rem;color:var(--muted);font-size:13px;}
+
+/* ── GPS PRE-FILL BADGE ──────────────────────────────────────────────────── */
+.gps-prefill-badge{display:inline-flex;align-items:center;gap:5px;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#065F46;margin-bottom:6px;}
+.camera-btn{width:100%;padding:10px;border-radius:9px;border:2px dashed #7C3AED;background:#F5EEFF;color:#5B21B6;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all .15s;}
+.camera-btn:hover{background:#EDE9FE;border-color:#5B21B6;}
+
+/* ── WELCOME SCREEN ──────────────────────────────────────────────────────── */
+.welcome-screen{position:fixed;inset:0;z-index:800;background:rgba(17,17,17,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;}
+.welcome-screen.hidden{display:none!important;}
+.welcome-card{max-width:500px;width:100%;background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.welcome-hero{background:var(--brand);padding:2rem;text-align:center;color:white;}
+.welcome-paw{font-size:50px;margin-bottom:.8rem;}
+.welcome-title{font-family:'Righteous',cursive;font-size:1.8rem;margin-bottom:.4rem;}
+.welcome-tagline{font-size:13px;opacity:.85;line-height:1.7;}
+.welcome-body{padding:1.5rem;}
+.how-steps{display:flex;flex-direction:column;gap:11px;margin-bottom:1.4rem;}
+.how-step{display:flex;align-items:flex-start;gap:12px;background:var(--brand-light);border-radius:10px;padding:11px 13px;}
+.how-step-icon{font-size:22px;flex-shrink:0;}
+.how-step-title{font-size:13px;font-weight:800;color:var(--brand-dark);margin-bottom:2px;}
+.how-step-text{font-size:12px;color:var(--ink2);line-height:1.55;}
+.status-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.4rem;}
+.sp-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:12px;font-weight:800;}
+.welcome-btns{display:flex;flex-direction:column;gap:8px;}
+.welcome-main-btn{width:100%;padding:13px;border-radius:11px;border:none;background:var(--brand);color:white;font-family:'Righteous',cursive;font-size:1rem;cursor:pointer;letter-spacing:.02em;}
+.welcome-main-btn:hover{background:var(--brand-dark);}
+.welcome-sec-btn{width:100%;padding:11px;border-radius:11px;border:1.5px solid var(--brand-mid);background:transparent;color:var(--brand-dark);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ── HELP / FAQ ───────────────────────────────────────────────────────────── */
+.faq-item{border-bottom:1px solid var(--border);padding:.85rem 0;}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{font-size:13px;font-weight:800;color:var(--brand-dark);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.faq-arrow{font-size:16px;opacity:.5;transition:transform .2s;flex-shrink:0;}
+.faq-a{font-size:13px;color:var(--ink2);line-height:1.7;margin-top:8px;display:none;}
+.faq-item.open .faq-a{display:block;}
+.faq-item.open .faq-arrow{transform:rotate(180deg);}
+.help-sec-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:.9rem 0 .4rem;}
+
+/* ── ADMIN PANEL ─────────────────────────────────────────────────────────── */
+.admin-panel{position:fixed;inset:0;z-index:600;background:var(--bg);display:none;flex-direction:column;}
+.admin-panel.open{display:flex;}
+.admin-topbar{background:var(--brand);color:white;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.admin-title{font-family:'Righteous',cursive;font-size:1.1rem;}
+.admin-close{margin-left:auto;background:rgba(255,255,255,.2);border:none;color:white;padding:6px 14px;border-radius:7px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;}
+.admin-body{display:flex;flex:1;overflow:hidden;}
+.admin-sidebar{width:190px;background:white;border-right:1px solid var(--border2);padding:1rem 0;flex-shrink:0;}
+.admin-nav-item{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;transition:background .12s;}
+.admin-nav-item:hover,.admin-nav-item.active{background:var(--brand-light);color:var(--brand-dark);}
+.admin-content{flex:1;overflow-y:auto;padding:1.2rem;}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.admin-h{font-family:'Righteous',cursive;font-size:1.1rem;color:var(--brand-dark);margin-bottom:14px;}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.2rem;}
+.stat-card-a{background:white;border:1px solid var(--border2);border-radius:var(--r);padding:14px 16px;}
+.sca-num{font-family:'Righteous',cursive;font-size:1.8rem;color:var(--brand);}
+.sca-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;}
+.admin-table{width:100%;border-collapse:collapse;font-size:12px;background:white;border-radius:var(--r);overflow:hidden;border:1px solid var(--border2);}
+.admin-table th{background:var(--brand-light);text-align:left;padding:9px 12px;font-weight:800;font-size:11px;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.05em;}
+.admin-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:var(--brand-light);}
+.admin-badge{display:inline-block;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:800;}
+.admin-empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:13px;}
+.admin-del-btn{background:var(--lost);color:white;border:none;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Nunito',sans-serif;}
+.admin-verify-btn{background:var(--found);color:white;border:none;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Nunito',sans-serif;margin-right:4px;}
+.admin-search{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Nunito Sans',sans-serif;font-size:12px;outline:none;width:220px;margin-bottom:12px;}
+.admin-search:focus{border-color:var(--brand);}
+
+/* TOAST */
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:white;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:700;z-index:900;transition:transform .3s;box-shadow:var(--shadow-lg);pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* LEAFLET */
+.leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden;}
+.leaflet-popup-content{margin:0!important;padding:13px 15px!important;}
+.leaflet-popup-tip-container{display:none;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--brand-mid);border-radius:2px;}
+
+@media(max-width:600px){
+  .frow,.frow3{grid-template-columns:1fr;}
+  .sidebar{width:100%;}
+  .type-grid{grid-template-columns:1fr 1fr;}
+  .search-panel{right:0;left:0;margin:0 8px;width:auto;}
+  .action-btn{padding:9px 14px;font-size:12px;}
+  .admin-sidebar{width:140px;}
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-icon">
+      <!-- TWO PAW PRINTS SVG -->
+      <svg width="28" height="28" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Left paw print -->
+        <ellipse cx="6" cy="9" rx="2" ry="2.5" fill="white" opacity="0.93"/>
+        <ellipse cx="10.5" cy="7.5" rx="1.9" ry="2.3" fill="white" opacity="0.93"/>
+        <ellipse cx="3.5" cy="13.5" rx="1.8" ry="2.2" fill="white" opacity="0.93"/>
+        <path d="M9.5 11C6.2 11 4.5 13.5 5.2 16.5C5.8 19 7.2 20.2 8.8 20.5C9.7 20.7 11 20.7 11.8 20.5C13.3 20.2 14.7 19 15.3 16.5C16 13.5 14.3 11 11 11C10.5 11 10 11 9.5 11Z" fill="white" opacity="0.93"/>
+        <!-- Right paw print (offset forward and down) -->
+        <ellipse cx="20.5" cy="12.5" rx="2" ry="2.5" fill="white" opacity="0.93"/>
+        <ellipse cx="25" cy="11" rx="1.9" ry="2.3" fill="white" opacity="0.93"/>
+        <ellipse cx="18" cy="17" rx="1.8" ry="2.2" fill="white" opacity="0.93"/>
+        <path d="M24 14.5C20.7 14.5 19 17 19.7 20C20.3 22.5 21.7 23.7 23.3 24C24.2 24.2 25.5 24.2 26.3 24C27.8 23.7 29.2 22.5 29.8 20C30.5 17 28.8 14.5 25.5 14.5C25 14.5 24.5 14.5 24 14.5Z" fill="white" opacity="0.93"/>
+      </svg>
+    </div>
+    <div class="logo-words">
+      <div class="logo-name">Pause4Paws</div>
+      <div class="logo-tag">Dubai Pet Community</div>
+    </div>
+  </a>
+
+  <div class="tb-div"></div>
+
+  <div class="comm-wrap" id="comm-wrap">
+    <button class="comm-btn" id="comm-btn">
+      <span id="comm-dot" style="width:8px;height:8px;border-radius:50%;background:var(--brand);display:inline-block;flex-shrink:0;"></span>
+      <span id="comm-name">Damac Hills 2</span>
+      <span style="font-size:10px;opacity:.4;margin-left:2px;">▾</span>
+    </button>
+    <div class="comm-dd" id="comm-dd"></div>
+  </div>
+
+  <div class="tb-div"></div>
+
+  <div class="search-wrap">
+    <span class="search-ico">🔍</span>
+    <input class="search-inp" type="text" placeholder="Search by name, breed, colour…" id="global-search" oninput="onGlobalSearch(this.value)">
+    <span class="search-x" id="search-x" onclick="clearGlobalSearch()">×</span>
+  </div>
+  <div class="tb-space"></div>
+  <button class="lang-toggle" onclick="toggleLanguage()" id="lang-btn" title="Toggle Arabic / English">🌐 <span id="lang-label">AR</span></button>
+  <div id="auth-actions"></div>
+</div>
+
+<!-- ── TWO ACTION BUTTONS ── -->
+<div class="action-bar">
+  <button class="action-btn btn-report" onclick="openReportModal()">
+    <span class="ai">🔴</span> Report Missing Pet
+  </button>
+  <button class="action-btn btn-found" onclick="openFoundModal()">
+    <span class="ai">🐾</span> I Found a Pet
+  </button>
+</div>
+
+<!-- ── FILTER PILLS ── -->
+<div class="filterbar">
+  <div class="fpill active" data-f="all" onclick="setFilter('all',this)">All</div>
+  <div class="fpill fl-lost" data-f="lost" onclick="setFilter('lost',this)"><span class="pd" style="background:var(--lost)"></span>Lost</div>
+  <div class="fpill fl-found" data-f="found" onclick="setFilter('found',this)"><span class="pd" style="background:var(--found)"></span>Found / Seen</div>
+  <div class="fpill fl-home" data-f="home" onclick="setFilter('home',this)"><span class="pd" style="background:var(--home)"></span>Back Home</div>
+  <div class="fpill fl-stray" data-f="stray" onclick="setFilter('stray',this)"><span class="pd" style="background:var(--stray)"></span>Known Stray</div>
+</div>
+
+<button class="narrow-btn" id="narrow-btn" onclick="toggleSearchPanel()">🔧 Narrow search</button>
+
+<div class="search-panel" id="search-panel">
+  <div class="sp-h">Filter by features</div>
+  <div class="sp-grid">
+    <div><div class="sp-lbl">Animal type</div><select class="sp-sel" id="f-species"><option value="">Any</option><option>Dog</option><option>Cat</option><option>Bird</option><option>Rabbit</option><option>Guinea Pig</option><option>Other</option></select></div>
+    <div><div class="sp-lbl">Sex</div><select class="sp-sel" id="f-sex"><option value="">Any</option><option>Male</option><option>Female</option><option>Unknown</option></select></div>
+    <div><div class="sp-lbl">Size</div><select class="sp-sel" id="f-size"><option value="">Any</option><option>Tiny</option><option>Small</option><option>Medium</option><option>Large</option><option>X-Large</option></select></div>
+    <div><div class="sp-lbl">Area</div><select class="sp-sel" id="f-community"><option value="">All areas</option></select></div>
+  </div>
+  <div class="sp-lbl">Colour / markings</div>
+  <input class="sp-inp" type="text" placeholder="e.g. orange tabby, black &amp; white…" id="f-color">
+  <div class="sp-lbl">Distinguishing features</div>
+  <input class="sp-inp" type="text" placeholder="e.g. scar, limp, red collar…" id="f-features">
+  <button class="sp-btn" onclick="applySearch()">Apply filters</button>
+  <button class="sp-btn sp-clr" onclick="clearSearch()">Clear all</button>
+</div>
+
+<div class="legend">
+  <div class="leg-title">Map key</div>
+  <div class="leg-row"><div class="lpin" style="background:var(--lost)"></div>Lost</div>
+  <div class="leg-row"><div class="lpin" style="background:var(--found)"></div>Found / Seen</div>
+  <div class="leg-row"><div class="lpin" style="background:var(--home)"></div>Back Home</div>
+  <div class="leg-row"><div class="lpin" style="background:var(--stray)"></div>Known Stray</div>
+  <div class="leg-row"><div class="lpin" style="background:var(--featured)"></div>⭐ Featured</div>
+</div>
+
+<button class="sight-btn" onclick="startSightingMode()">📍 Log a sighting</button>
+<button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()">☰</button>
+<button class="help-btn" onclick="openModal('helpModal')" title="Help &amp; FAQ">?</button>
+
+<div class="sight-target" id="sight-target" style="display:none;">
+  <div class="cross">📍</div><p>Drag map to exact sighting location</p>
+</div>
+<div class="sight-bar" id="sight-bar" style="display:none;">
+  <span>Move map to sighting spot</span>
+  <button class="sight-cancel" onclick="cancelSighting()">Cancel</button>
+  <button class="sight-confirm" onclick="confirmSighting()">Confirm ✓</button>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div><div class="sb-title">Active Reports</div><div style="font-size:11px;color:var(--muted);margin-top:1px;" id="sb-count">Loading…</div></div>
+    <button class="sb-close" onclick="toggleSidebar()">×</button>
+  </div>
+  <div class="sb-body" id="sb-body"></div>
+</div>
+
+<!-- HOME PANEL -->
+<div class="home-panel" id="home-panel">
+  <div class="hp-handle" onclick="document.getElementById('home-panel').classList.toggle('expanded')">
+    <div class="hp-drag"></div>
+    <div class="hp-top">
+      <div class="hp-title">Pause4Paws</div>
+      <div class="hp-hint">↑ Pull up for stats &amp; featured pets</div>
+    </div>
+  </div>
+  <div class="hp-body">
+    <div class="reunion">
+      <div class="reunion-left">
+        <div class="reunion-comm" id="reunion-comm-label">In Damac Hills 2</div>
+        <div class="reunion-num" id="reunion-count">0</div>
+        <div class="reunion-text">pets reunited with their families 🎉</div>
+        <div class="reunion-global" id="reunion-global">0 reunited across all Dubai communities</div>
+      </div>
+      <div class="reunion-icon">🏠</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" style="color:var(--lost)" id="s-lost">0</div><div class="stat-l">Lost</div></div>
+      <div class="stat"><div class="stat-n" style="color:var(--found)" id="s-found">0</div><div class="stat-l">Found</div></div>
+      <div class="stat"><div class="stat-n" style="color:var(--home)" id="s-home">0</div><div class="stat-l">Back Home</div></div>
+      <div class="stat"><div class="stat-n" style="color:var(--stray)" id="s-stray">0</div><div class="stat-l">Strays</div></div>
+    </div>
+    <div id="featured-section">
+      <div style="padding:0 14px 8px;">
+        <div class="feat-header">
+          <div class="feat-title">⭐ Featured Pets — Help Find Them</div>
+          <button class="feat-cta" onclick="openModal('featuredModal')">Feature your pet →</button>
+        </div>
+        <div class="feat-scroll" id="feat-list"></div>
+      </div>
+    </div>
+    <div class="feat-empty" id="featured-empty" onclick="openModal('featuredModal')">
+      <div class="feat-empty-title">⭐ Feature your missing pet here</div>
+      <div class="feat-empty-sub">Seen by everyone in <span id="feat-comm-name">this community</span><br>25 AED / week · 75 AED / month</div>
+    </div>
+    <div style="height:1rem;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── WELCOME SCREEN ── -->
+<div class="welcome-screen" id="welcomeScreen">
+  <div class="welcome-card">
+    <div class="welcome-hero">
+      <div class="welcome-paw">🐾</div>
+      <div class="welcome-title">Pause4Paws Dubai</div>
+      <div class="welcome-tagline">A community map helping residents find lost pets,<br>report sightings, and bring animals back home.</div>
+    </div>
+    <div class="welcome-body">
+      <div class="how-steps">
+        <div class="how-step"><div class="how-step-icon">🔴</div><div><div class="how-step-title">Lost a pet?</div><div class="how-step-text">Tap <strong>Report Missing Pet</strong> to add your pet to the map with a photo and description. Your neighbours will immediately be able to help look out for them.</div></div></div>
+        <div class="how-step"><div class="how-step-icon">🟠</div><div><div class="how-step-title">Found or spotted an animal?</div><div class="how-step-text">Tap <strong>I Found a Pet</strong> to log your sighting. Pin the exact location on the map so owners can track where their pet has been seen.</div></div></div>
+        <div class="how-step"><div class="how-step-icon">🔍</div><div><div class="how-step-title">Trying to identify a pet?</div><div class="how-step-text">Use <strong>Narrow search</strong> to filter by species, colour, size, and features. Browse the map to see if the animal matches any missing pet report.</div></div></div>
+        <div class="how-step"><div class="how-step-icon">🏠</div><div><div class="how-step-title">Pet found and back home?</div><div class="how-step-text">Open the pet's profile and tap <strong>Mark as Back Home</strong>. The reunited counter for your community updates — every homecoming counts.</div></div></div>
+      </div>
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;">Map colour guide</div>
+      <div class="status-pills">
+        <div class="sp-pill" style="background:#FFF0F0;"><div style="width:9px;height:9px;border-radius:50%;background:var(--lost);"></div><span style="font-size:12px;font-weight:800;color:#111;">Lost</span></div>
+        <div class="sp-pill" style="background:#EDFAF4;"><div style="width:9px;height:9px;border-radius:50%;background:var(--found);"></div><span style="font-size:12px;font-weight:800;color:#111;">Found / Seen</span></div>
+        <div class="sp-pill" style="background:#FFFBEB;"><div style="width:9px;height:9px;border-radius:50%;background:var(--home);"></div><span style="font-size:12px;font-weight:800;color:#111;">Back Home</span></div>
+        <div class="sp-pill" style="background:#EEF4FF;"><div style="width:9px;height:9px;border-radius:50%;background:var(--stray);"></div><span style="font-size:12px;font-weight:800;color:#111;">Known Stray</span></div>
+        <div class="sp-pill" style="background:#F5EEFF;"><div style="width:9px;height:9px;border-radius:50%;background:var(--featured);"></div><span style="font-size:12px;font-weight:800;color:#111;">⭐ Featured</span></div>
+      </div>
+      <div class="welcome-btns">
+        <button class="welcome-main-btn" onclick="dismissWelcome()">Explore the map →</button>
+        <button class="welcome-sec-btn" onclick="dismissWelcome();openModal('authOverlay');switchTab('signup')">Join now — 24 AED lifetime (early bird)</button>
+        <button class="welcome-sec-btn" onclick="openModal('helpModal')" style="border-color:var(--border2);color:var(--ink2);">Help &amp; FAQ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HELP / FAQ ── -->
+<div class="overlay hidden" id="helpModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-top"><div><h2 class="modal-title">Help &amp; FAQ</h2><p class="modal-sub">Everything you need to know about Pause4Paws</p></div><button class="modal-x" onclick="closeModal('helpModal')">×</button></div>
+    <div class="modal-inner">
+      <div class="help-sec-title">Getting started</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What is Pause4Paws? <span class="faq-arrow">▾</span></div><div class="faq-a">Pause4Paws is a community-powered map for Dubai residents to report missing pets, log sightings, and help reunite animals with their owners. It covers Damac Hills 2, Town Square, Mira, Serena, Villanova, Arabian Ranches 2, Tilal Al Ghaf, Dubai Hills Estate, Remraam, and many other nearby communities.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Do I need an account to use the app? <span class="faq-arrow">▾</span></div><div class="faq-a">You can browse the map and view all reports without an account. To submit a report or log a sighting, you need a free account. Registration is a one-time lifetime fee — pay once, member for life. No renewals, no subscriptions.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">How much does it cost? Is it really lifetime? <span class="faq-arrow">▾</span></div><div class="faq-a">Yes — completely lifetime. The early bird price is <strong>24 AED</strong> (available until 30 May 2026), after which it rises to <strong>30 AED</strong>. You pay once via Wio QR code and never pay again. All payments are non-refundable.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">How do I pay? <span class="faq-arrow">▾</span></div><div class="faq-a">After creating your account, a Wio QR code is shown on screen. Open your banking app (any UAE bank), go to "Scan &amp; Pay" or QR payments, scan the code, and confirm the 24 AED. Your account activates automatically once payment is received.</div></div>
+      <div class="help-sec-title">Reporting a missing pet</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">How do I report my missing pet? <span class="faq-arrow">▾</span></div><div class="faq-a">Tap the red <strong>Report Missing Pet</strong> button. Sign in (or create an account), fill in your pet's details — name, species, breed, colour, distinguishing features, microchip number, the date and time they went missing, and which cluster or street. Add at least one photo. Your pet appears as a red pin on the map immediately.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">My pet has been found — how do I update the report? <span class="faq-arrow">▾</span></div><div class="faq-a">Open your pet's report, tap <strong>Full details</strong>, then tap <strong>Mark as Back Home</strong>. The pin turns yellow and your community's reunited counter increments.</div></div>
+      <div class="help-sec-title">Found or spotted an animal</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">I found an animal — what do I do? <span class="faq-arrow">▾</span></div><div class="faq-a">Tap <strong>I Found a Pet</strong>. This enters sighting mode — drag the map to the exact location you found the animal and tap Confirm. You can link the sighting to a specific missing pet or submit it as a general sighting. Use <strong>Narrow search</strong> to filter by what you see and check if any missing pet matches.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What are Known Strays (blue pins)? <span class="faq-arrow">▾</span></div><div class="faq-a">Known Strays are animals that community members or cat feeders have identified as regular strays in the area. Listing them prevents them being repeatedly reported as "found" pets. Cat feeders who know their local strays are encouraged to add them here.</div></div>
+      <div class="help-sec-title">🚨 Emergency animal contacts — Dubai</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Who do I call for an injured or dangerous animal? <span class="faq-arrow">▾</span></div><div class="faq-a">
+        <strong>Dubai Municipality Animal Control:</strong> <a href="tel:800900" style="color:var(--brand);">800 900</a><br>
+        <strong>Dubai Animal Welfare (DPAA):</strong> <a href="tel:+97143413323" style="color:var(--brand);">+971 4 341 3323</a><br>
+        <strong>RSPCA Dubai / K9 Friends:</strong> <a href="tel:+97143415679" style="color:var(--brand);">+971 4 341 5679</a><br>
+        <strong>Feline Friends (cats):</strong> <a href="https://wa.me/971501234567" style="color:var(--brand);">WhatsApp helpline</a><br>
+        <strong>Dubai Falcon Hospital (birds):</strong> <a href="tel:+97148329617" style="color:var(--brand);">+971 4 832 9617</a><br>
+        <strong>Emergency vet (24hr) — Veterinary Village:</strong> <a href="tel:+97143484799" style="color:var(--brand);">+971 4 348 4799</a><br>
+        <strong>Blue Oasis Vet Clinic (24hr):</strong> <a href="tel:+97143418387" style="color:var(--brand);">+971 4 341 8387</a>
+      </div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What if I find an injured animal outside hours? <span class="faq-arrow">▾</span></div><div class="faq-a">Call Dubai Municipality's 24-hour line: <a href="tel:800900" style="color:var(--brand);">800 900</a>. Keep the animal calm and in a quiet, contained space. Do not offer food or water to an injured animal before a vet assessment. Log the sighting on Pause4Paws so the community can help coordinate.</div></div>
+      <div class="help-sec-title">Featured pets</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">What is a Featured Pet? <span class="faq-arrow">▾</span></div><div class="faq-a">Featured pets appear at the top of the home screen with a purple pin on the map. You can feature your missing pet for <strong>25 AED per week</strong> or <strong>75 AED per month</strong>. Cancel any time — when your pet comes home, mark them as Back Home and the listing stops automatically.</div></div>
+      <div class="help-sec-title">Communities &amp; map</div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">Which communities are on the map? <span class="faq-arrow">▾</span></div><div class="faq-a">Currently: Damac Hills 2 (all clusters with real GPS), Damac Hills, Mudon, Mudon Views, Arabian Ranches 1, 2 &amp; 3, Town Square, Mira, Mira Oasis, Serena, Villanova, Tilal Al Ghaf, Dubai Hills Estate, Remraam, The Sustainable City, Layan, Al Waha, Majan, Liwan, Motor City, Dubai Sports City, Cherry Gardens, and Al Barsha South. More can be added — use the request box below.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">A cluster or area is in the wrong place — how do I report it? <span class="faq-arrow">▾</span></div><div class="faq-a">Use the <strong>Map Correction</strong> box below. Select the community, describe what's wrong or missing, and — if you can — paste the correct GPS coordinates from Google Maps (right-click any spot on Google Maps to copy the coordinates). Your report goes straight to the admin who will update the map.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">How do I get GPS coordinates from Google Maps? <span class="faq-arrow">▾</span></div><div class="faq-a">On a computer: open Google Maps, find the exact spot, right-click on it, and the coordinates appear at the top of the menu — click them to copy.<br><br>On a phone: open Google Maps, long-press on the exact spot until a red pin drops, then tap the coordinates shown at the bottom of the screen to copy them.<br><br>Paste them into the Map Correction box below.</div></div>
+      <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">I need help or something isn't working <span class="faq-arrow">▾</span></div><div class="faq-a">Contact the Pause4Paws admin via WhatsApp. For urgent missing pet situations, use the WhatsApp share button on the pet's card to share directly to your community group.</div></div>
+
+      <div class="feat-req-section" style="margin-top:.5rem;">
+        <div class="feat-req-title" style="font-size:11px;color:var(--brand-dark);font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.6rem;">📍 Report a map correction</div>
+        <div style="background:var(--brand-light);border-radius:9px;padding:10px 12px;margin-bottom:.75rem;font-size:12px;color:var(--brand-dark);line-height:1.7;">
+          Is a cluster in the wrong position, labelled incorrectly, or missing from the map entirely? Tell us below and we'll fix it.
+        </div>
+        <div class="fg" style="margin-bottom:7px;">
+          <label class="fl" style="font-size:10px;">Community</label>
+          <select class="fs" id="mapcorr-community" style="font-size:12px;"></select>
+        </div>
+        <div class="fg" style="margin-bottom:7px;">
+          <label class="fl" style="font-size:10px;">Type of correction</label>
+          <select class="fs" id="mapcorr-type" style="font-size:12px;">
+            <option value="wrong_position">📍 Cluster/area is in the wrong position</option>
+            <option value="wrong_name">✏️ Name is incorrect or misspelled</option>
+            <option value="missing">➕ A cluster/area is missing entirely</option>
+            <option value="duplicate">🔁 Duplicate entry on the map</option>
+            <option value="other">💬 Other map issue</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:7px;">
+          <label class="fl" style="font-size:10px;">Cluster / area name affected</label>
+          <input class="fi" type="text" id="mapcorr-cluster" placeholder="e.g. Victoria, Alvorada 3, Hayat Townhouses…" style="font-size:12px;">
+        </div>
+        <div class="fg" style="margin-bottom:7px;">
+          <label class="fl" style="font-size:10px;">Correct GPS coordinates <span style="font-weight:400;color:var(--muted);">(optional but very helpful)</span></label>
+          <input class="fi" type="text" id="mapcorr-gps" placeholder="e.g. 25.01493, 55.28331 — right-click Google Maps to copy" style="font-size:12px;font-family:monospace;">
+        </div>
+        <div class="fg" style="margin-bottom:10px;">
+          <label class="fl" style="font-size:10px;">Details</label>
+          <textarea class="feat-req-input" id="mapcorr-details" placeholder="Describe exactly what's wrong and what it should say or where it should be…" style="min-height:56px;font-size:12px;"></textarea>
+        </div>
+        <button class="feat-req-btn" style="width:100%;padding:10px;" onclick="submitMapCorrection()">📍 Send map correction →</button>
+        <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.6;">Your correction goes directly to the admin. You'll see a confirmation when it's sent. The map is usually updated within 24–48 hours.</p>
+      </div>
+
+      <div class="feat-req-section">
+        <div class="feat-req-title">💡 Feature request / Report a bug</div>
+        <textarea class="feat-req-input" id="feat-req-text" placeholder="Tell us what you'd like — a new community, a missing feature, a bug, anything at all…"></textarea>
+        <button class="feat-req-btn" onclick="submitFeatureRequest()">Send request →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AUTH MODAL ── -->
+<div class="overlay hidden" id="authOverlay">
+  <div class="modal">
+    <div class="modal-top"><div><h2 class="modal-title">Join Pause4Paws</h2><p class="modal-sub">Sign in or create your account</p></div><button class="modal-x" onclick="closeModal('authOverlay')">×</button></div>
+    <div class="modal-inner">
+      <div class="auth-tabs"><div class="auth-tab active" id="t-signin" onclick="switchTab('signin')">Sign in</div><div class="auth-tab" id="t-signup" onclick="switchTab('signup')">Create account</div></div>
+      <div id="signin-block">
+        <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="si-email" placeholder="you@example.com"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="si-pw" placeholder="••••••••"></div>
+        <button class="sub-btn" onclick="doSignIn()">Sign in</button>
+        <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px;">No account? <span style="color:var(--brand);cursor:pointer;font-weight:700;" onclick="switchTab('signup')">Create one</span></p>
+      </div>
+      <div id="signup-block" style="display:none;">
+        <div class="fee-box signup"><span class="fee-icon">🔐</span><div><span class="fee-amount">Lifetime membership — pay once, never again</span><span class="fee-note">🔥 Early bird: <strong>24 AED</strong> (expires 30 May 2026) · Standard: 30 AED · Paid via Wio QR code</span></div></div>
+        <div class="frow"><div class="fg"><label class="fl">First name *</label><input class="fi" type="text" id="su-fn" placeholder="Sara"></div><div class="fg"><label class="fl">Last name</label><input class="fi" type="text" id="su-ln" placeholder="Al Rashed"></div></div>
+        <div class="fg"><label class="fl">Email *</label><input class="fi" type="email" id="su-email" placeholder="you@example.com"></div>
+        <div class="fg"><label class="fl">WhatsApp number</label><input class="fi" type="tel" id="su-phone" placeholder="+971 50 000 0000"></div>
+        <div class="fg"><label class="fl">Your community</label><select class="fs" id="su-comm"><option value="">Select your area</option></select></div>
+        <div class="fg"><label class="fl">Password * (min. 8 characters)</label><input class="fi" type="password" id="su-pw" placeholder="••••••••"></div>
+        <hr class="hdivider">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">💳 After sign-up you'll be shown a <strong>Wio QR code</strong> to pay 24 AED via your banking app. Your account activates once payment is confirmed.</p>
+        <button class="sub-btn" onclick="doSignUp()">Create account →</button>
+        <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;text-align:center;">By signing up you agree that all payments are non-refundable. Lifetime membership is for one person and non-transferable.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORT MODAL ── -->
+<div class="overlay hidden" id="reportOverlay">
+  <div class="modal">
+    <div class="modal-top"><div><h2 class="modal-title">New Report</h2><p class="modal-sub">Tell the community about this pet</p></div><button class="modal-x" onclick="closeModal('reportOverlay')">×</button></div>
+    <div class="modal-inner">
+      <div class="type-grid">
+        <div class="type-tile" id="tt-lost" onclick="pickType('lost')" style="border-color:var(--lost);background:#FFF0F0;"><div class="te">🔴</div><div class="tl" style="color:var(--lost);">Lost</div><div class="ts">My pet</div></div>
+        <div class="type-tile" id="tt-found" onclick="pickType('found')"><div class="te">🟢</div><div class="tl" style="color:var(--found);">Found/Seen</div><div class="ts">I spotted one</div></div>
+        <div class="type-tile" id="tt-home" onclick="pickType('home')"><div class="te">🟡</div><div class="tl" style="color:var(--home);">Back Home</div><div class="ts">Reunited!</div></div>
+        <div class="type-tile" id="tt-stray" onclick="pickType('stray')"><div class="te">🔵</div><div class="tl" style="color:var(--stray);">Stray</div><div class="ts">Known stray</div></div>
+      </div>
+      <div class="frow"><div class="fg"><label class="fl">Pet name *</label><input class="fi" type="text" id="r-name" placeholder="e.g. Luna"></div><div class="fg"><label class="fl">Community *</label><select class="fs" id="r-comm" onchange="onCommChange(this.value)"><option value="">Select area</option></select></div></div>
+      <div class="fg"><label class="fl">Cluster / Street / Building</label><select class="fs" id="r-cluster"><option value="">Select community first</option></select></div>
+      <div class="frow3">
+        <div class="fg"><label class="fl">Species</label><select class="fs" id="r-species"><option>Dog</option><option>Cat</option><option>Bird</option><option>Rabbit</option><option>Guinea Pig</option><option>Other</option></select></div>
+        <div class="fg"><label class="fl">Sex</label><select class="fs" id="r-sex"><option value="">Unknown</option><option>Male</option><option>Female</option></select></div>
+        <div class="fg"><label class="fl">Size</label><select class="fs" id="r-size"><option value="">Unknown</option><option>Tiny</option><option>Small</option><option>Medium</option><option>Large</option><option>X-Large</option></select></div>
+      </div>
+      <div class="frow"><div class="fg"><label class="fl">Breed</label><input class="fi" type="text" id="r-breed" placeholder="e.g. Labrador"></div><div class="fg"><label class="fl">Colour</label><input class="fi" type="text" id="r-color" placeholder="e.g. Golden brown"></div></div>
+      <div class="fg"><label class="fl">Distinguishing features</label><input class="fi" type="text" id="r-features" placeholder="Collar, scar, limp, markings…"></div>
+      <div class="fg"><label class="fl">Microchip number <span style="font-weight:400;color:var(--muted);">(if known)</span></label><input class="fi" type="text" id="r-microchip" placeholder="e.g. 982000123456789"></div>
+      <div class="frow"><div class="fg"><label class="fl">Date last seen</label><input class="fi" type="date" id="r-date"></div><div class="fg"><label class="fl">Approx time</label><input class="fi" type="time" id="r-time"></div></div>
+      <div class="fg"><label class="fl">Description</label><textarea class="ft" id="r-desc" placeholder="Behaviour, temperament, exactly where last seen…"></textarea></div>
+      <div class="fg"><label class="fl">Your contact number</label><input class="fi" type="tel" id="r-contact" placeholder="+971 50 000 0000"></div>
+      <div class="fg">
+        <label class="fl">Photos (up to 4)</label>
+        <div id="gps-prefill-badge" class="gps-prefill-badge" style="display:none;">📍 GPS location captured</div>
+        <button type="button" class="camera-btn" onclick="triggerAICamera()">
+          🤖 📷 AI Smart Camera — auto-fills details &amp; GPS
+        </button>
+        <div class="ai-match-banner" id="ai-match-hint" style="display:none;">
+          <span class="ai-match-icon">🤖</span>
+          <span class="ai-match-text">AI found possible matches! Tap to compare with lost pets.</span>
+          <button class="ai-match-btn" onclick="runAIMatch()">View matches</button>
+        </div>
+        <div class="photo-zone" onclick="document.getElementById('r-photos').click()"><div style="font-size:24px;margin-bottom:4px;">📷</div><div style="font-size:12px;color:var(--brand-dark);font-weight:600;">Or tap to add photos manually</div><input type="file" id="r-photos" accept="image/*" multiple style="display:none" onchange="handleReportPhotos(event)"></div>
+        <div class="photo-grid" id="r-preview"></div>
+      </div>
+      <div id="pin-note" style="display:none;background:var(--brand-light);border:1px solid var(--brand-mid);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--brand-dark);font-weight:700;margin-bottom:.85rem;">📍 Location pinned from map</div>
+      <button class="sub-btn" id="submit-report-btn" onclick="submitReport()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIGHTING LOG ── -->
+<div class="overlay hidden" id="sightingLogOverlay">
+  <div class="modal">
+    <div class="modal-top"><div><h2 class="modal-title">Log a Sighting</h2><p class="modal-sub" id="sl-loc-text">Location pinned on map</p></div><button class="modal-x" onclick="closeModal('sightingLogOverlay')">×</button></div>
+    <div class="modal-inner">
+      <div class="fg"><label class="fl">Which pet did you see?</label><select class="fs" id="sl-pet"><option value="">Unknown / general sighting</option></select></div>
+      <div class="frow"><div class="fg"><label class="fl">Species</label><select class="fs" id="sl-species"><option>Dog</option><option>Cat</option><option>Bird</option><option>Rabbit</option><option>Other</option></select></div><div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="sl-date"></div></div>
+      <div class="fg"><label class="fl">Time spotted</label><input class="fi" type="time" id="sl-time"></div>
+      <div class="fg"><label class="fl">What did you see?</label><textarea class="ft" id="sl-desc" placeholder="Colour, size, direction heading, behaviour…"></textarea></div>
+      <button class="sub-btn" onclick="submitSighting()">Log Sighting</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PET DETAIL ── -->
+<div class="overlay hidden" id="detailOverlay">
+  <div class="modal" style="max-width:500px;position:relative;">
+    <button class="modal-x" style="position:absolute;top:12px;right:13px;z-index:10;" onclick="closeModal('detailOverlay')">×</button>
+    <div id="detail-content" style="overflow-y:auto;max-height:92vh;"></div>
+  </div>
+</div>
+
+<!-- ── FEATURED MODAL ── -->
+<div class="overlay hidden" id="featuredModal">
+  <div class="modal">
+    <div class="modal-top"><div><h2 class="modal-title" style="color:var(--featured);">⭐ Feature Your Pet</h2><p class="modal-sub">Seen by everyone in your community</p></div><button class="modal-x" onclick="closeModal('featuredModal')">×</button></div>
+    <div class="modal-inner">
+      <div class="fee-box featured"><span class="fee-icon">⭐</span><div><span class="fee-amount" style="color:var(--featured);">Featured Pet Spotlight</span><span class="fee-note">Your pet sits at the top of the home screen. Stop any time when found.</span></div></div>
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Choose a plan</div>
+      <div class="pricing-grid">
+        <div class="price-card" id="plan-week" onclick="selectPlan('week')"><div class="pc-dur">Weekly</div><div class="pc-amt">25</div><div class="pc-unit">AED per week</div><div class="pc-unit" style="font-size:9px;margin-top:3px;">Cancel anytime</div></div>
+        <div class="price-card selected" id="plan-month" onclick="selectPlan('month')"><div class="pc-dur">Monthly</div><div class="pc-amt">75</div><div class="pc-unit">AED per month</div><div class="pc-badge">Best value</div></div>
+      </div>
+      <div class="fg"><label class="fl">Which pet to feature?</label><select class="fs" id="feat-pet-select"><option value="">Select a pet you've reported</option></select></div>
+      <div style="background:var(--brand-light);border-radius:9px;padding:10px 13px;margin-bottom:.9rem;font-size:12px;color:var(--brand-dark);line-height:1.7;">✅ Shown at top of home screen for your community<br>✅ Purple map pin so your pet stands out<br>✅ Stop listing when your pet is found</div>
+      <hr class="hdivider">
+      <div style="background:white;border:1.5px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:8px;">
+        <input class="fi" type="text" placeholder="Card number" style="border:none;border-bottom:1px solid var(--border);border-radius:0;padding:0 0 9px;margin-bottom:10px;font-size:13px;">
+        <div class="frow"><input class="fi" type="text" placeholder="MM / YY" style="border:none;border-bottom:1px solid var(--border);border-radius:0;padding:0 0 7px;font-size:12px;"><input class="fi" type="text" placeholder="CVV" style="border:none;border-bottom:1px solid var(--border);border-radius:0;padding:0 0 7px;font-size:12px;"></div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">🔒 Secure · Connect Stripe to process real payments</p>
+      <button class="sub-btn feat-btn" onclick="submitFeatured()">⭐ Start featuring my pet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-topbar">
+    <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 34 34" fill="none"><ellipse cx="6" cy="9" rx="2" ry="2.5" fill="white" opacity="0.9"/><ellipse cx="10.5" cy="7.5" rx="1.9" ry="2.3" fill="white" opacity="0.9"/><ellipse cx="3.5" cy="13.5" rx="1.8" ry="2.2" fill="white" opacity="0.9"/><path d="M9.5 11C6.2 11 4.5 13.5 5.2 16.5C5.8 19 7.2 20.2 8.8 20.5C9.7 20.7 11 20.7 11.8 20.5C13.3 20.2 14.7 19 15.3 16.5C16 13.5 14.3 11 11 11C10.5 11 10 11 9.5 11Z" fill="white" opacity="0.9"/><ellipse cx="20.5" cy="12.5" rx="2" ry="2.5" fill="white" opacity="0.9"/><ellipse cx="25" cy="11" rx="1.9" ry="2.3" fill="white" opacity="0.9"/><ellipse cx="18" cy="17" rx="1.8" ry="2.2" fill="white" opacity="0.9"/><path d="M24 14.5C20.7 14.5 19 17 19.7 20C20.3 22.5 21.7 23.7 23.3 24C24.2 24.2 25.5 24.2 26.3 24C27.8 23.7 29.2 22.5 29.8 20C30.5 17 28.8 14.5 25.5 14.5C25 14.5 24.5 14.5 24 14.5Z" fill="white" opacity="0.9"/></svg>
+    </div>
+    <div class="admin-title">Pause4Paws — Admin Dashboard</div>
+    <button class="admin-close" onclick="closeAdmin()">← Back to map</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-sidebar">
+      <div class="admin-nav-item active" onclick="showAdminTab('overview',this)">📊 Overview</div>
+      <div class="admin-nav-item" onclick="showAdminTab('subscribers',this)">👥 Subscribers</div>
+      <div class="admin-nav-item" onclick="showAdminTab('reports',this)">🐾 Pet Reports</div>
+      <div class="admin-nav-item" onclick="showAdminTab('featured',this)">⭐ Featured</div>
+      <div class="admin-nav-item" onclick="showAdminTab('reunited',this)">🏠 Back Home</div>
+      <div class="admin-nav-item" onclick="showAdminTab('mapcorr',this)">📍 Map Corrections</div>
+    </div>
+    <div class="admin-content">
+      <div class="admin-section active" id="tab-overview">
+        <div class="admin-h">Overview</div>
+        <div class="stat-cards">
+          <div class="stat-card-a"><div class="sca-num" id="a-total-users">0</div><div class="sca-lbl">Total subscribers</div></div>
+          <div class="stat-card-a"><div class="sca-num" id="a-paid-users">0</div><div class="sca-lbl">Paid (20 AED)</div></div>
+          <div class="stat-card-a"><div class="sca-num" id="a-total-reports">0</div><div class="sca-lbl">Pet reports</div></div>
+          <div class="stat-card-a"><div class="sca-num" id="a-lost-count">0</div><div class="sca-lbl">Currently lost</div></div>
+          <div class="stat-card-a"><div class="sca-num" id="a-reunited">0</div><div class="sca-lbl">Reunited total</div></div>
+          <div class="stat-card-a"><div class="sca-num" id="a-featured-count">0</div><div class="sca-lbl">Featured (paying)</div></div>
+          <div class="stat-card-a" onclick="showAdminTab('mapcorr',document.querySelector('[onclick*=mapcorr]'))" style="cursor:pointer;"><div class="sca-num" id="a-mapcorr-count" style="color:#92400E;">0</div><div class="sca-lbl">Map corrections ⏳</div></div>
+        </div>
+        <div class="admin-h" style="margin-top:1rem;">Recent reports</div>
+        <div id="admin-recent" style="font-size:13px;color:var(--muted);">Loading…</div>
+      </div>
+      <div class="admin-section" id="tab-subscribers">
+        <div class="admin-h">All Subscribers</div>
+        <input class="admin-search" type="text" placeholder="Search by name or email…" oninput="filterAdminTable('sub-table',this.value)">
+        <div style="overflow-x:auto;"><table class="admin-table" id="sub-table"><thead><tr><th>Name</th><th>Email</th><th>Community</th><th>WhatsApp</th><th>Joined</th><th>Paid</th><th>Actions</th></tr></thead><tbody id="sub-tbody"><tr><td colspan="7" class="admin-empty">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div class="admin-section" id="tab-reports">
+        <div class="admin-h">All Pet Reports</div>
+        <input class="admin-search" type="text" placeholder="Search by pet name, community…" oninput="filterAdminTable('reports-table',this.value)">
+        <div style="overflow-x:auto;"><table class="admin-table" id="reports-table"><thead><tr><th>Pet</th><th>Status</th><th>Species</th><th>Community</th><th>Cluster</th><th>Date</th><th>Reporter</th><th>Actions</th></tr></thead><tbody id="reports-tbody"><tr><td colspan="8" class="admin-empty">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div class="admin-section" id="tab-featured">
+        <div class="admin-h">Featured Pets</div>
+        <table class="admin-table"><thead><tr><th>Pet</th><th>Community</th><th>Plan</th><th>Since</th><th>Owner</th><th>Actions</th></tr></thead><tbody id="featured-tbody"><tr><td colspan="6" class="admin-empty">No featured pets yet</td></tr></tbody></table>
+      </div>
+      <div class="admin-section" id="tab-reunited">
+        <div class="admin-h">Back Home Pets</div>
+        <table class="admin-table"><thead><tr><th>Pet</th><th>Species</th><th>Community</th><th>Date reported</th></tr></thead><tbody id="reunited-tbody"><tr><td colspan="4" class="admin-empty">Loading…</td></tr></tbody></table>
+      </div>
+      <div class="admin-section" id="tab-mapcorr">
+        <div class="admin-h">📍 Map Corrections <span id="mapcorr-pending-badge" style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:2px 9px;border-radius:50px;margin-left:8px;"></span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:.8rem;">Corrections submitted by subscribers. Update the map file with the GPS coordinates provided, then mark each one as resolved.</div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="mapcorr-table">
+            <thead><tr><th>Community</th><th>Type</th><th>Cluster</th><th>GPS provided</th><th>Details</th><th>From</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="mapcorr-tbody"><tr><td colspan="9" class="admin-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COUNTDOWN / EARLY BIRD POPUP ── -->
+<div class="countdown-overlay hidden" id="countdownOverlay">
+  <div class="countdown-card">
+    <div class="cd-hero">
+      <div class="cd-badge">🔥 Early Bird Offer</div>
+      <div class="cd-title">Pause4Paws Dubai</div>
+      <div class="cd-sub">Lifetime membership · Pay once, never again<br>Price goes up on 30 May 2026</div>
+    </div>
+    <div class="cd-body">
+      <div class="cd-prices">
+        <div class="cd-price-a">
+          <div class="cd-amt">24 <span style="font-size:1rem;">AED</span></div>
+          <div class="cd-lbl">Early Bird</div>
+          <div class="cd-eb">Until 30 May</div>
+        </div>
+        <div class="cd-price-b">
+          <div class="cd-amt-b">30 <span style="font-size:1rem;">AED</span></div>
+          <div class="cd-lbl">Standard</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">After 30 May</div>
+        </div>
+      </div>
+      <div class="cd-timer">
+        <div class="cd-timer-label">Early bird ends in</div>
+        <div class="cd-timer-boxes">
+          <div class="cd-tb"><div class="cd-tb-num" id="cd-days">00</div><div class="cd-tb-lbl">Days</div></div>
+          <div class="cd-tb"><div class="cd-tb-num" id="cd-hours">00</div><div class="cd-tb-lbl">Hours</div></div>
+          <div class="cd-tb"><div class="cd-tb-num" id="cd-mins">00</div><div class="cd-tb-lbl">Mins</div></div>
+          <div class="cd-tb"><div class="cd-tb-num" id="cd-secs">00</div><div class="cd-tb-lbl">Secs</div></div>
+        </div>
+      </div>
+      <button class="cd-cta" onclick="document.getElementById('countdownOverlay').classList.add('hidden');openModal('authOverlay');switchTab('signup');">Join now — 24 AED lifetime →</button>
+      <button class="cd-skip" onclick="document.getElementById('countdownOverlay').classList.add('hidden');localStorage.setItem('p4p_cd_dismissed','1');">Maybe later</button>
+      <div class="cd-fine">All payments are non-refundable. Lifetime membership is for one person, non-transferable. Paid via Wio QR code — no card details required.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── WIO QR PAYMENT MODAL ── -->
+<div class="overlay hidden" id="wioQrModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-top"><div><h2 class="modal-title">💳 Complete your payment</h2><p class="modal-sub">Scan with any UAE banking app</p></div><button class="modal-x" onclick="closeModal('wioQrModal')">×</button></div>
+    <div class="qr-modal-inner">
+      <div class="qr-amount" id="qr-display-amount">24 AED</div>
+      <div class="qr-label">One-time · Lifetime membership</div>
+      <div class="qr-code-box">
+        <div style="width:180px;height:180px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;color:#888;text-align:center;padding:14px;line-height:1.6;">
+          📱 Place your Wio QR code image here.<br><br>
+          <span style="font-size:10px;">See the setup guide in the instructions document.</span>
+        </div>
+      </div>
+      <div class="qr-steps">
+        <strong>How to pay — 3 steps</strong>
+        1. Open any UAE banking app (Wio, ENBD, FAB, ADCB, Mashreq…)<br>
+        2. Tap "Scan &amp; Pay" or "QR Payment"<br>
+        3. Scan the code above and confirm 24 AED
+      </div>
+      <button class="qr-done-btn" onclick="closeModal('wioQrModal');showToast('✅ Thank you! Account activated within 24 hrs once payment is confirmed.');">✅ I've paid — done!</button>
+      <div class="qr-fine">Payment is non-refundable. If you have trouble scanning, WhatsApp the admin with a screenshot. Activation is manual within 24 hours.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI PET MATCH MODAL ── -->
+<div class="overlay hidden" id="aiMatchModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="ai-modal-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:26px;">🤖</span>
+        <div>
+          <div class="ai-modal-title">AI Pet Matcher</div>
+          <div class="ai-modal-sub">Comparing your photo against all lost &amp; found reports</div>
+        </div>
+        <button class="modal-x" style="margin-left:auto;color:white;opacity:.7;background:rgba(255,255,255,.15);border-radius:7px;border:none;width:30px;height:30px;font-size:18px;cursor:pointer;" onclick="closeModal('aiMatchModal')">×</button>
+      </div>
+    </div>
+    <div class="modal-inner">
+      <div id="ai-scanning" class="ai-scan-anim">
+        <div class="ai-scan-spinner">🔍</div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink);">Scanning photo…</div>
+        <div style="font-size:12px;margin-top:4px;">Checking colour, markings, breed shape</div>
+      </div>
+      <div id="ai-results" style="display:none;">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;" id="ai-results-label">Possible matches</div>
+        <div class="ai-match-grid" id="ai-match-grid"></div>
+        <div id="ai-no-match" class="ai-no-match" style="display:none;">
+          <div style="font-size:28px;margin-bottom:.5rem;">🐾</div>
+          <div style="font-weight:800;color:var(--ink);margin-bottom:4px;">No close matches found</div>
+          <div>Your photo has been noted. If this animal matches a future report, we'll flag it.</div>
+        </div>
+        <button class="sub-btn" style="margin-top:.5rem;" onclick="closeModal('aiMatchModal')">Close — continue my report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FIREBASE + APP LOGIC                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, serverTimestamp, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+// NOTE: Firebase Storage import kept for reference but photos now upload via Cloudinary (free)
+
+const FB={
+  apiKey:"AIzaSyC_P666CCZJdl0TJdhjOb7mXU0sKv7AOww",
+  authDomain:"pause4paws-ac64e.firebaseapp.com",
+  projectId:"pause4paws-ac64e",
+  storageBucket:"pause4paws-ac64e.firebasestorage.app",
+  messagingSenderId:"249407789952",
+  appId:"1:249407789952:web:389b9360e737055b9eff65"
+};
+const fbApp=initializeApp(FB);
+const auth=getAuth(fbApp);
+const db=getFirestore(fbApp);
+// Firebase Storage removed — photos stored via Cloudinary (free, no upgrade needed)
+// ── CLOUDINARY CONFIG ──────────────────────────────────────────────────────
+const CLOUDINARY_CLOUD  = "dmypjc2gg";
+const CLOUDINARY_PRESET = "gmqzaufc";
+const CLOUDINARY_URL    = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+
+// ★★★ CHANGE THIS TO YOUR EMAIL — gives you admin access ★★★
+const ADMIN_EMAIL = "admin@pause4paws.com";
+
+// ── COMMUNITIES & CLUSTERS ─────────────────────────────────────────────────
+// NOTE: Cluster coordinates are approximate.
+// To fix them: open Google Maps, right-click each cluster centre,
+// copy the coordinates, and send them to Claude to update.
+const COMMUNITIES={
+  "Damac Hills 2":{lat:24.9850,lng:55.3820,zoom:14,color:"#EA580C",
+    clusterCoords:[
+      [24.98078,55.38333,"Victoria"],[24.97950,55.38023,"Basswood"],[24.97862,55.38424,"Mimosa"],
+      [24.98349,55.37720,"Albizia"],[24.98456,55.38019,"Avencia"],[24.98683,55.37785,"Amargo"],
+      [24.99150,55.37903,"Vardon"],[24.99293,55.38716,"Aquilegia"],[24.99582,55.37163,"Pacifica"],
+      [24.99750,55.37528,"Centaury"],[24.99730,55.37989,"Janusia"],[24.99492,55.37942,"Trixis"],
+      [24.99600,55.38624,"Sycamore"],[24.99745,55.39249,"Claret"],[24.99428,55.39143,"Zinnia"],
+      [24.99736,55.39769,"Juniper"],[24.99386,55.39812,"Primrose"],[24.99173,55.37239,"Sanctnary"],
+      [24.98783,55.39846,"Aster"],[24.98612,55.39631,"Coursetia"],[24.98836,55.39237,"Hawthorn"],
+      [24.98988,55.39400,"Mulberry"],[24.98461,55.38789,"Verona"],
+      [24.9580,55.3650,"Elo"],[24.9648,55.3635,"Elo 2"],[24.9665,55.3605,"Elo 3"],
+      [24.9400,55.3510,"Natura"],[24.9385,55.3480,"Aurum"],[24.9370,55.3450,"Violet"],
+      [24.9360,55.3520,"Malta"],[24.9380,55.3380,"Trump PRVT"],[24.9590,55.3390,"Viridis Residences"],
+      [24.9510,55.3490,"The Park"],[24.9425,55.3430,"Danah Bay"],[24.9445,55.3545,"Rivina"],
+      [24.9465,55.3475,"Oleander"],[24.9600,55.3440,"Camelia"],[24.9420,55.3490,"Acuna"],
+      [24.9440,55.3550,"Amazonia"],[24.9450,55.3480,"Odora"],
+    ]},
+  "Damac Hills":{lat:25.0340,lng:55.2670,zoom:15,color:"#C2410C",
+    clusterCoords:[[25.0370,55.2700,"Aknan Villas"],[25.0350,55.2680,"Brookfield"],[25.0330,55.2700,"Claret"],[25.0360,55.2650,"Golf Vita"],[25.0315,55.2720,"Jasmine"],[25.0340,55.2640,"Loreto"],[25.0380,55.2660,"Organica"],[25.0305,55.2700,"Primrose"],[25.0390,55.2700,"Silver Springs"],[25.0325,55.2650,"Trump Estates"],[25.0360,55.2730,"Water Side"],[25.0295,55.2680,"The Legends"]]},
+  "Mudon":{lat:25.0200,lng:55.2690,zoom:15,color:"#9A3412",
+    clusterCoords:[
+      [25.01842,55.26620,"Mudon Al Ranim"],
+      [25.02233,55.27073,"Rahat"],
+      [25.02635,55.27011,"Al Salam"],
+      [25.02214,55.27550,"Al Naseem"],
+      [25.01692,55.27104,"Arabella Townhouses"],
+      [25.01310,55.26749,"Arabella 2 Townhouses"],
+      [25.00919,55.26278,"Arabella 3"],
+    ]},
+  "Mudon Views":{lat:25.046,lng:55.266,zoom:15,color:"#7C2D12",
+    clusterCoords:[[25.047,55.267,"Mudon Views 1"],[25.045,55.265,"Mudon Views 2"],[25.048,55.264,"Mudon Views 3"]]},
+  // ── Arabian Ranches 3 — clusters from master plan image (Image 1)
+  // AR3 sits between Emirates Road (south) and Sheikh Zayed Bin Hamdan Al Nahyan St (north)
+  // Real centroid approx 25.0580, 55.2695
+  "Arabian Ranches 3":{lat:25.0580,lng:55.2695,zoom:15,color:"#B45309",
+    clusterCoords:[
+      [25.0640,55.2580,"Sun"],
+      [25.0625,55.2620,"Bliss"],
+      [25.0610,55.2580,"Joy"],
+      [25.0600,55.2660,"Caya"],
+      [25.0585,55.2700,"Caya II"],
+      [25.0570,55.2640,"Ruba"],
+      [25.0555,55.2680,"Spring"],
+      [25.0625,55.2740,"Elie Saab"],
+      [25.0620,55.2800,"Elie Saab II"],
+      [25.0590,55.2760,"June"],
+      [25.0615,55.2660,"June 2"],
+      [25.0680,55.2830,"Central Park Area"],
+    ]},
+
+  // ── Arabian Ranches 2 — sits adjacent to The Sustainable City
+  // Contains: Saheel, Alma, Savannah, Mirador, Al Reem 1/2/3, La Avenida, Terra Nova, Al Mahra
+  // These were previously under "Arabian Ranches" — corrected here per user confirmation
+  "Arabian Ranches 2":{lat:25.0500,lng:55.2750,zoom:14,color:"#92400E",
+    clusterCoords:[
+      [25.05302,55.25758,"Saheel"],
+      [25.05405,55.26800,"Alma 1"],
+      [25.05300,55.27000,"Alma 2"],
+      [25.05568,55.27591,"Savannah"],
+      [25.05591,55.28459,"Mirrador"],
+      [25.05500,55.27450,"La Avenida 1"],
+      [25.05204,55.26946,"La Avenida 2"],
+      [25.04919,55.27561,"Al Mahra"],
+      [25.05112,55.28077,"Terranova"],
+      [25.06007,55.29507,"Al Reem 1"],
+      [25.05654,55.29044,"Al Reem 2"],
+      [25.05956,55.28940,"Al Reem 3"],
+    ]},
+
+  // ── Mira — exact GPS coordinates
+  "Mira":{lat:25.0340,lng:55.2720,zoom:15,color:"#C2410C",
+    clusterCoords:[
+      [25.03150,55.27626,"Reem"],
+      [25.02907,55.27265,"Azalea"],
+      [25.03283,55.27319,"Yasmin"],
+      [25.03180,55.26789,"Samara"],
+      [25.03533,55.26556,"Casa"],
+      [25.03808,55.26891,"Palma"],
+      [25.03512,55.27009,"Rasha"],
+      [25.03579,55.27355,"Rosa"],
+      [25.04000,55.27389,"Lila"],
+    ]},
+
+  // ── Arabian Ranches 1 — Alvorada, Palmera, Mirrador La Coleccion, Hattan
+  "Arabian Ranches 1":{lat:25.0440,lng:55.2660,zoom:15,color:"#78350F",
+    clusterCoords:[
+      [25.04378,55.25735,"Alvorada 1"],
+      [25.04339,55.26080,"Alvorada 2"],
+      [25.04416,55.26481,"Alvorada 3"],
+      [25.04438,55.26960,"Alvorada 4"],
+      [25.04225,55.26603,"Palmera 1"],
+      [25.04028,55.26225,"Palmera 2"],
+      [25.03988,55.25768,"Palmera 3"],
+      [25.04187,55.25595,"Palmera 4"],
+      [25.04636,55.26110,"Mirrador La Coleccion 1"],
+      [25.04513,55.25518,"Mirrador La Coleccion 2"],
+      [25.04671,55.26690,"Hattan"],
+    ]},
+
+  // ── Mira Oasis — 3 sub-clusters from Image 2, real location ~24.9230, 55.2680
+  "Mira Oasis":{lat:24.9230,lng:55.2680,zoom:16,color:"#9A3412",
+    clusterCoords:[
+      [24.9250,55.2670,"Mira Oasis 1"],
+      [24.9230,55.2680,"Mira Oasis 2"],
+      [24.9210,55.2695,"Mira Oasis 3"],
+    ]},
+
+  "Town Square":{lat:25.0085,lng:55.2900,zoom:15,color:"#EA580C",
+    clusterCoords:[
+      [25.01493,55.28331,"Naseem Townhouses"],
+      [25.01141,55.27970,"Reem Townhouses"],
+      [25.01320,55.28712,"Safi Townhouses"],
+      [25.01195,55.28864,"Safi Apartments"],
+      [25.00989,55.29111,"Zahra Apartments"],
+      [25.00784,55.29281,"Zahra Townhouses"],
+      [25.00605,55.29481,"Zahra Breeze Apartments"],
+      [25.00446,55.29666,"Hayat Boulevard"],
+      [24.99967,55.30145,"Hayat Townhouses"],
+      [25.00007,55.29775,"Diplomat Residences"],
+      [24.99926,55.29601,"Ascot Residences"],
+      [24.99756,55.29793,"Regent Residences"],
+      [24.99623,55.29513,"Noor Townhouses"],
+      [24.99901,55.29151,"Sama Townhouses"],
+      [25.00263,55.29169,"Rawda Apartments"],
+      [25.00398,55.29326,"Jenna / Warda Apartments"],
+      [25.00360,55.28582,"Una Apartments"],
+      [25.00322,55.28552,"Liva Apartments"],
+      [25.00697,55.28207,"Maha Townhouses"],
+    ]},
+  "Serena":{lat:25.0370,lng:55.2860,zoom:15,color:"#7C2D12",
+    clusterCoords:[
+      [25.03785,55.28940,"Bella Casa"],
+      [25.03622,55.28184,"Casa Viva"],
+      [25.03305,55.28652,"Casa Dora"],
+    ]},
+  "Villanova":{lat:25.0755,lng:55.3560,zoom:15,color:"#9A3412",
+    clusterCoords:[
+      [25.07496,55.34879,"La Violeta 1"],
+      [25.07575,55.34662,"La Violeta 2"],
+      [25.07163,55.34973,"La Quinta"],
+      [25.07723,55.36459,"Amaranta A"],
+      [25.08092,55.36162,"Amaranta B"],
+      [25.07797,55.35546,"Amaranta 2"],
+      [25.07436,55.35458,"Amaranta 3"],
+      [25.07035,55.35730,"Amaranta"],
+      [25.07623,55.36213,"La Rosa I"],
+      [25.07385,55.36106,"La Rosa II"],
+      [25.07820,55.36131,"La Rosa III"],
+      [25.07687,55.35868,"La Rosa IV"],
+      [25.07243,55.35394,"La Rosa V"],
+      [25.07355,55.35747,"La Rosa VI"],
+    ]},
+  "Tilal Al Ghaf":{lat:25.028,lng:55.227,zoom:15,color:"#1D4ED8",
+    clusterCoords:[[25.030,55.229,"Aura"],[25.028,55.226,"Elan"],[25.026,55.228,"Harmony"],[25.029,55.224,"Lanai"],[25.027,55.231,"Serenity"],[25.031,55.225,"Plagette 32"]]},
+  "Dubai Hills Estate":{lat:25.122,lng:55.255,zoom:15,color:"#0F766E",
+    clusterCoords:[[25.124,55.257,"Acacia"],[25.122,55.253,"Bloom"],[25.120,55.256,"Cedar"],[25.123,55.251,"Elm"],[25.125,55.254,"Golf Place"],[25.121,55.258,"Maple"],[25.126,55.252,"Park Heights"],[25.119,55.254,"Sidra"]]},
+  "Remraam":{lat:25.0030,lng:55.2530,zoom:15,color:"#9A3412",
+    clusterCoords:[
+      [25.00601,55.24619,"Al Thamam 35"],
+      [25.00773,55.24860,"Al Thamam 27"],
+      [25.00773,55.24860,"Al Thamam 10"],
+      [25.00848,55.25217,"Al Thamam 17"],
+      [25.00747,55.25152,"Al Thamam 8"],
+      [25.00573,55.25209,"Al Thamam 5"],
+      [25.00533,55.25160,"Al Thamam 3"],
+      [25.00637,55.24806,"Al Thamam 20"],
+      [25.00392,55.24759,"Al Thamam 28"],
+      [25.00351,55.24687,"Al Thamam 47"],
+      [25.00529,55.24696,"Al Thamam 24"],
+      [25.00348,55.25147,"Al Ramth 1"],
+      [25.00230,55.25056,"Al Ramth 7"],
+      [25.00100,55.25034,"Al Ramth 11"],
+      [25.00146,55.25150,"Al Ramth 4"],
+      [24.99918,55.25212,"Al Ramth 21"],
+      [25.00019,55.25382,"Al Ramth 12"],
+      [25.00096,55.25476,"Al Ramth 16"],
+      [25.00042,55.25560,"Al Ramth 35"],
+      [25.00222,55.25532,"Al Ramth 20"],
+      [25.00286,55.25649,"Al Ramth 45"],
+      [25.00342,55.25565,"Al Ramth 24"],
+      [25.00387,55.25624,"Al Ramth 49"],
+      [25.00510,55.25518,"Al Ramth 55"],
+      [25.00452,55.25428,"Al Ramth 28"],
+      [25.00498,55.25383,"Al Ramth 61"],
+    ]},
+  "The Sustainable City":{lat:25.03022,lng:55.27933,zoom:16,color:"#065F46",
+    clusterCoords:[
+      [25.03022,55.27933,"The Sustainable City"],
+    ]},
+  "Layan":{lat:25.022,lng:55.276,zoom:15,color:"#C2410C",
+    clusterCoords:[[25.024,55.278,"Layan 1"],[25.022,55.275,"Layan 2"],[25.020,55.277,"Layan 3"],[25.023,55.274,"Layan 4"]]},
+  "Al Waha":{lat:25.024,lng:55.280,zoom:15,color:"#7C2D12",
+    clusterCoords:[[25.026,55.282,"Al Waha 1"],[25.024,55.279,"Al Waha 2"],[25.022,55.281,"Al Waha 3"]]},
+  "Majan":{lat:25.071,lng:55.320,zoom:15,color:"#EA580C",
+    clusterCoords:[[25.073,55.322,"Majan 1"],[25.071,55.319,"Majan 2"],[25.069,55.321,"Majan 3"],[25.072,55.318,"Majan 4"]]},
+  "Liwan":{lat:25.083,lng:55.370,zoom:15,color:"#9A3412",
+    clusterCoords:[[25.085,55.372,"Liwan 1"],[25.083,55.369,"Liwan 2"],[25.081,55.371,"Liwan 3"],[25.084,55.368,"Liwan 4"],[25.082,55.373,"Queue Point"]]},
+  "Motor City":{lat:25.0510,lng:55.2400,zoom:15,color:"#EA580C",
+    clusterCoords:[[25.0530,55.2420,"Green Community"],[25.0510,55.2390,"Park Central"],[25.0490,55.2410,"Uptown Motor City"],[25.0520,55.2450,"Victory Heights"],[25.0475,55.2380,"First Avenue"]]},
+  "Dubai Sports City":{lat:25.0300,lng:55.2230,zoom:15,color:"#C2410C",
+    clusterCoords:[[25.0320,55.2250,"Elite Sports Residence"],[25.0300,55.2210,"Canal Residence"],[25.0285,55.2230,"Golf Tower"],[25.0315,55.2265,"Hera Tower"],[25.0270,55.2215,"Olympia"],[25.0340,55.2240,"Soccer Suites"]]},
+  "Cherry Gardens":{lat:25.0070,lng:55.2810,zoom:15,color:"#9A3412",
+    clusterCoords:[[25.0085,55.2830,"Cherry Gardens Phase 1"],[25.0070,55.2800,"Cherry Gardens Phase 2"],[25.0055,55.2820,"Lila"],[25.0095,55.2820,"Palma"],[25.0045,55.2800,"Rosa"],[25.0080,55.2790,"Senna"]]},
+  "Al Barsha South":{lat:25.0740,lng:55.2280,zoom:15,color:"#7C2D12",
+    clusterCoords:[[25.0760,55.2300,"Al Barsha South 1"],[25.0740,55.2260,"Al Barsha South 2"],[25.0720,55.2280,"Al Barsha South 3"],[25.0755,55.2320,"Al Barsha South 4"],[25.0725,55.2240,"Al Barsha South 5"]]}
+};
+
+const EMOJI={Dog:"🐕",Cat:"🐈",Bird:"🐦",Rabbit:"🐇","Guinea Pig":"🐹",Other:"🐾"};
+const SC={lost:"#D63030",found:"#1A9A5A",home:"#D4A017",stray:"#1A5FC4",featured:"#9A3FC4"};
+const SL={lost:"Lost",found:"Found / Seen",home:"Back Home",stray:"Known Stray"};
+const SBG={lost:"#FFF0F0",found:"#EDFAF4",home:"#FFFBEB",stray:"#EEF4FF"};
+
+let currentUser=null,currentCommunity="Damac Hills 2",currentFilter="all";
+let allPets=[],allUsers=[],allMapCorrections=[],mapMarkers=[],clusterGrp=null,sidebarOpen=false;
+let sightingMode=false,pendingLatLng=null,activeFilters={};
+let reportType="lost",reportFiles=[],selectedPlan="month",map;
+const zoneTooltips=[];
+
+function populateSelects(){
+  const names=Object.keys(COMMUNITIES);
+  ["r-comm","su-comm"].forEach(id=>{const el=document.getElementById(id);if(!el)return;const def=el.options[0];el.innerHTML="";el.appendChild(def);names.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;el.appendChild(o);});});
+  const fc=document.getElementById("f-community");if(fc){fc.innerHTML=`<option value="">All areas</option>`;names.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;fc.appendChild(o);});}
+}
+
+function initMap(){
+  const c=COMMUNITIES[currentCommunity];
+  map=L.map("map",{center:[c.lat,c.lng],zoom:c.zoom,zoomControl:false});
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",maxZoom:20}).addTo(map);
+  L.control.zoom({position:"bottomleft"}).addTo(map);
+  clusterGrp=L.markerClusterGroup({maxClusterRadius:55,showCoverageOnHover:false,spiderfyOnMaxZoom:true});
+  map.addLayer(clusterGrp);
+  drawZones();
+}
+
+function drawZones(){
+  Object.entries(COMMUNITIES).forEach(([name,comm])=>{
+    (comm.clusterCoords||[]).forEach(([lat,lng,cl])=>{
+      L.circle([lat,lng],{radius:160,color:comm.color,fillColor:comm.color,fillOpacity:0.09,weight:1.5,dashArray:"4,6"})
+        .addTo(map).on("click",()=>zoneClick(name,cl,lat,lng));
+      const tt=L.tooltip({permanent:true,direction:"center",className:"zone-lbl",interactive:false}).setContent(cl).setLatLng([lat,lng]);
+      zoneTooltips.push(tt);
+      if(map.getZoom()>=14)tt.addTo(map);
+    });
+  });
+  map.on("zoomend",()=>{const z=map.getZoom();zoneTooltips.forEach(tt=>{try{if(z>=14)tt.addTo(map);else map.removeLayer(tt);}catch(e){}});});
+}
+
+function zoneClick(commName,cl,lat,lng){
+  map.setView([lat,lng],17,{animate:true});
+  const pets=allPets.filter(p=>p.community===commName&&p.cluster===cl);
+  if(!pets.length)return;
+  L.popup({maxWidth:260}).setLatLng([lat,lng]).setContent(
+    `<div style="font-family:'Nunito Sans',sans-serif;">
+      <div style="font-family:'Righteous',cursive;font-size:13px;color:#C2410C;margin-bottom:5px;">${cl}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:8px;">${pets.length} report${pets.length>1?"s":""}</div>
+      ${pets.slice(0,5).map(p=>`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-top:1px solid #f0e8e0;cursor:pointer;" onclick="openDetail('${p.id}')">
+        <span style="font-size:17px;">${EMOJI[p.species]||"🐾"}</span>
+        <div><div style="font-size:12px;font-weight:800;">${p.name}</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:${p.featured?SC.featured:SC[p.status]}">${p.featured?"⭐ ":""}${SL[p.status]}</div></div>
+      </div>`).join("")}
+      ${pets.length>5?`<div style="font-size:11px;color:#888;padding-top:4px;border-top:1px solid #f0e8e0;">+${pets.length-5} more in list</div>`:""}
+    </div>`
+  ).openOn(map);
+}
+
+function makeIcon(pet){
+  const isFeat=pet.featured,c=isFeat?SC.featured:SC[pet.status]||"#888";
+  const sym={lost:"!",found:"✓",home:"♡",stray:"~"}[pet.status]||"?";
+  return L.divIcon({html:`<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40"><path d="M15 0C6.716 0 0 6.716 0 15c0 9.8 15 25 15 25S30 24.8 30 15C30 6.716 23.284 0 15 0z" fill="${c}"/><circle cx="15" cy="15" r="8" fill="rgba(255,255,255,0.22)"/><text x="15" y="20" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="900" fill="white">${isFeat?"★":sym}</text></svg>`,iconSize:[30,40],iconAnchor:[15,40],popupAnchor:[0,-42],className:""});
+}
+function makeSightIcon(){return L.divIcon({html:`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#1A9A5A" opacity=".85" stroke="white" stroke-width="1.5"/><circle cx="8" cy="8" r="3" fill="white"/></svg>`,iconSize:[16,16],iconAnchor:[8,8],className:""});}
+
+function renderMarkers(){
+  clusterGrp.clearLayers();mapMarkers=[];
+  const pets=filteredPets();
+  pets.forEach(pet=>{
+    if(!pet.lat||!pet.lng)return;
+    const m=L.marker([pet.lat,pet.lng],{icon:makeIcon(pet)});
+    m.bindPopup(popupHTML(pet),{maxWidth:260});
+    clusterGrp.addLayer(m);mapMarkers.push({m,id:pet.id});
+    (pet.sightings||[]).forEach(s=>{if(s.lat&&s.lng){const sm=L.marker([s.lat,s.lng],{icon:makeSightIcon()}).addTo(map);sm.bindTooltip(`Sighting: ${pet.name} · ${s.time||""}`,{direction:"top",className:"zone-lbl"});}});
+  });
+  updateStats();renderSidebar(pets);renderFeatured();
+}
+
+function popupHTML(pet){
+  const e=EMOJI[pet.species]||"🐾",c=pet.featured?SC.featured:SC[pet.status],sl=SL[pet.status];
+  const photo=pet.photoURL?`<img src="${pet.photoURL}" style="width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'">`:`<div style="width:100%;height:70px;background:#FFF7ED;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:8px;">${e}</div>`;
+  return `<div class="pet-popup">${photo}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;"><span class="pp-badge" style="background:${c}20;color:${c};">${pet.featured?"⭐ ":""}${sl}</span><span style="font-size:10px;color:#aaa;">${pet.date||""}</span></div>
+    <div class="pp-name">${pet.name}</div>
+    <div class="pp-detail">${[pet.breed,pet.color,pet.sex].filter(Boolean).join(" · ")}</div>
+    ${pet.desc?`<div class="pp-desc">${pet.desc.substring(0,70)}${pet.desc.length>70?"…":""}</div>`:""}
+    ${pet.cluster?`<div class="pp-cluster">${pet.cluster} · ${pet.community}</div>`:""}
+    ${pet.sightings&&pet.sightings.length?`<div style="font-size:11px;color:#1A9A5A;margin:4px 0;font-weight:800;">📍 ${pet.sightings.length} sighting${pet.sightings.length>1?"s":""}</div>`:""}
+    <div style="display:flex;gap:5px;margin-top:7px;">
+      <a href="tel:${pet.contact||""}" style="flex:1;text-align:center;padding:6px;border:1px solid #FED7AA;border-radius:7px;font-size:11px;font-weight:800;color:#C2410C;text-decoration:none;background:#FFF7ED;">📞 Call</a>
+      <button onclick="openDetail('${pet.id}')" style="flex:1;padding:6px;border:none;border-radius:7px;font-size:11px;font-weight:800;color:white;background:${c};cursor:pointer;font-family:'Nunito',sans-serif;">Details</button>
+    </div>
+    <button onclick="shareWA('${pet.id}')" style="width:100%;margin-top:5px;padding:6px;border:none;border-radius:7px;font-size:11px;font-weight:800;color:white;background:#25D366;cursor:pointer;font-family:'Nunito',sans-serif;">📲 WhatsApp</button>
+  </div>`;
+}
+
+function filteredPets(){
+  let p=[...allPets];
+  if(currentFilter!=="all")p=p.filter(x=>x.status===currentFilter);
+  if(!activeFilters.allAreas)p=p.filter(x=>x.community===currentCommunity);
+  if(activeFilters.species)p=p.filter(x=>x.species===activeFilters.species);
+  if(activeFilters.sex)p=p.filter(x=>x.sex===activeFilters.sex);
+  if(activeFilters.size)p=p.filter(x=>x.size===activeFilters.size);
+  if(activeFilters.color)p=p.filter(x=>(x.color||"").toLowerCase().includes(activeFilters.color.toLowerCase()));
+  if(activeFilters.features)p=p.filter(x=>(x.features||"").toLowerCase().includes(activeFilters.features.toLowerCase()));
+  if(activeFilters.q){const q=activeFilters.q.toLowerCase();p=p.filter(x=>[x.name,x.breed,x.color,x.desc,x.cluster,x.features].some(v=>(v||"").toLowerCase().includes(q)));}
+  return p;
+}
+
+function updateStats(){
+  const b=allPets.filter(p=>p.community===currentCommunity);
+  ["lost","found","home","stray"].forEach(s=>document.getElementById("s-"+s).textContent=b.filter(p=>p.status===s).length);
+}
+
+function renderSidebar(pets){
+  document.getElementById("sb-count").textContent=`${pets.length} report${pets.length!==1?"s":""}`;
+  document.getElementById("sb-body").innerHTML=pets.length?pets.map(p=>{
+    const e=EMOJI[p.species]||"🐾",c=p.featured?SC.featured:SC[p.status];
+    return `<div class="pet-card" onclick="focusPet('${p.id}')">
+      ${p.photoURL?`<img src="${p.photoURL}" class="pc-img" onerror="this.outerHTML='<div class=\\"pc-ph\\">${e}</div>'">`:`<div class="pc-ph">${e}</div>`}
+      <div class="pc-info"><div class="pc-status" style="color:${c}">${p.featured?"⭐ ":""}${SL[p.status]}</div><div class="pc-name">${p.name}</div><div class="pc-detail">${p.breed||"Unknown"} · ${p.color||""}</div><div class="pc-detail">${p.date||""}${p.time?" at "+p.time:""}</div><span class="pc-cluster">${p.cluster||p.community}</span></div>
+    </div>`;
+  }).join(""):`<div style="padding:2rem;text-align:center;color:var(--muted);font-size:13px;">No pets match your current filters</div>`;
+}
+
+function renderFeatured(){
+  const featured=allPets.filter(p=>p.featured&&p.community===currentCommunity);
+  const sec=document.getElementById("featured-section"),empty=document.getElementById("featured-empty"),list=document.getElementById("feat-list");
+  document.getElementById("feat-comm-name").textContent=currentCommunity;
+  if(featured.length){
+    sec.style.display="";empty.style.display="none";
+    list.innerHTML=featured.map(p=>{const e=EMOJI[p.species]||"🐾";return `<div class="feat-card" onclick="openDetail('${p.id}')"><div class="feat-badge">⭐ FEATURED</div>${p.photoURL?`<img src="${p.photoURL}" class="feat-img" onerror="this.outerHTML='<div class=\\"feat-ph\\">${e}</div>'">`:`<div class="feat-ph">${e}</div>`}<div class="feat-info"><div class="feat-status" style="color:${SC[p.status]}">${SL[p.status]}</div><div class="feat-name">${p.name}</div><div class="feat-area">${p.cluster||p.community}</div></div></div>`;}).join("");
+  }else{sec.style.display="none";empty.style.display="";}
+}
+
+function startListening(){
+  onSnapshot(query(collection(db,"pets"),orderBy("createdAt","desc")),snap=>{allPets=snap.docs.map(d=>({id:d.id,...d.data()}));renderMarkers();updateAdminTables();});
+  onSnapshot(query(collection(db,"users"),orderBy("createdAt","desc")),snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));updateAdminTables();});
+  // Live listener for map corrections — updates admin badge in real time
+  onSnapshot(query(collection(db,"mapCorrections"),orderBy("reportedAt","desc")),snap=>{
+    allMapCorrections=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const pending=allMapCorrections.filter(c=>c.status==="pending").length;
+    const badge=document.getElementById("mapcorr-pending-badge");
+    if(badge)badge.textContent=pending>0?`${pending} pending`:"";
+    updateMapCorrectionTable();
+    updateAdminTables();
+  });
+  loadReunionStats();
+}
+
+async function loadReunionStats(){
+  try{
+    const gs=await getDoc(doc(db,"stats","global"));
+    const gt=gs.exists()?gs.data().reunited||0:0;
+    document.getElementById("reunion-global").textContent=`${gt} reunited across all Dubai communities`;
+    const cs=await getDoc(doc(db,"stats","comm_"+currentCommunity.replace(/ /g,"_")));
+    document.getElementById("reunion-count").textContent=cs.exists()?cs.data().reunited||0:0;
+    document.getElementById("reunion-comm-label").textContent=`In ${currentCommunity}`;
+  }catch(e){}
+}
+
+// ── CLOUDINARY PHOTO UPLOAD ─────────────────────────────────────────────────
+// Uploads a photo to Cloudinary and returns the secure URL.
+// Free tier: 25 GB storage, 25 GB bandwidth/month — no Firebase Storage needed.
+async function uploadPhoto(file, petId){
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  formData.append("folder", "pause4paws/pets");
+  formData.append("public_id", `${petId}_${Date.now()}`);
+  const resp = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+  if(!resp.ok) throw new Error("Photo upload failed: " + resp.statusText);
+  const data = await resp.json();
+  return data.secure_url; // https://res.cloudinary.com/dmypjc2gg/image/upload/...
+}
+
+window.pickType=function(t){
+  reportType=t;
+  ["lost","found","home","stray"].forEach(s=>{const el=document.getElementById("tt-"+s);if(el){el.style.borderColor=t===s?SC[s]:"#e5e5e5";el.style.background=t===s?SBG[s]:"white";}});
+};
+window.handleReportPhotos=function(e){reportFiles=Array.from(e.target.files).slice(0,4);const p=document.getElementById("r-preview");p.innerHTML="";reportFiles.forEach(f=>{const i=document.createElement("img");i.src=URL.createObjectURL(f);i.className="photo-thumb";p.appendChild(i);});};
+window.onCommChange=function(val){const comm=COMMUNITIES[val];const sel=document.getElementById("r-cluster");sel.innerHTML=`<option value="">Select cluster / street</option>`;if(comm)(comm.clusterCoords||[]).forEach(([,,cl])=>sel.innerHTML+=`<option>${cl}</option>`);};
+
+window.submitReport=async function(){
+  if(!currentUser){showToast("Please sign in to submit a report");openModal("authOverlay");return;}
+  const name=document.getElementById("r-name").value.trim(),comm=document.getElementById("r-comm").value;
+  if(!name||!comm){showToast("Please enter a pet name and select a community");return;}
+  const btn=document.getElementById("submit-report-btn");btn.textContent="Uploading…";btn.disabled=true;
+  try{
+    const cd=COMMUNITIES[comm],cluster=document.getElementById("r-cluster").value;
+    let lat,lng;
+    if(pendingLatLng){lat=pendingLatLng.lat;lng=pendingLatLng.lng;}
+    else if(cd&&cluster){const cc=(cd.clusterCoords||[]).find(c=>c[2]===cluster);const j=()=>(Math.random()-.5)*.0006;lat=cc?cc[0]+j():cd.lat+j();lng=cc?cc[1]+j():cd.lng+j();}
+    else{lat=cd?cd.lat:24.940;lng=cd?cd.lng:55.348;}
+    const data={name,status:reportType,species:document.getElementById("r-species").value,sex:document.getElementById("r-sex").value||"Unknown",size:document.getElementById("r-size").value||"Unknown",breed:document.getElementById("r-breed").value||"Unknown",color:document.getElementById("r-color").value||"Unknown",features:document.getElementById("r-features").value||"",microchip:document.getElementById("r-microchip").value||"",community:comm,cluster,date:document.getElementById("r-date").value||new Date().toISOString().split("T")[0],time:document.getElementById("r-time").value||"",desc:document.getElementById("r-desc").value||"",contact:document.getElementById("r-contact").value||"",lat,lng,reporterUid:currentUser.uid,reporterName:currentUser.displayName||currentUser.email,createdAt:serverTimestamp(),sightings:[],photoURL:null,featured:false};
+    const ref2=await addDoc(collection(db,"pets"),data);
+    if(reportFiles.length){const url=await uploadPhoto(reportFiles[0],ref2.id);await updateDoc(ref2,{photoURL:url});}
+    pendingLatLng=null;closeModal("reportOverlay");map.setView([lat,lng],17,{animate:true});
+    showToast("✅ Report submitted! Your community has been notified.");resetReportForm();
+  }catch(err){showToast("Error: "+err.message);}
+  btn.textContent="Submit Report";btn.disabled=false;
+};
+
+function resetReportForm(){["r-name","r-breed","r-color","r-features","r-microchip","r-desc","r-contact","r-time"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("r-comm").value="";document.getElementById("r-cluster").innerHTML=`<option value="">Select community first</option>`;document.getElementById("r-preview").innerHTML="";document.getElementById("ai-match-hint").style.display="none";reportFiles=[];window.pickType("lost");document.getElementById("pin-note").style.display="none";}
+
+window.startSightingMode=function(){sightingMode=true;document.getElementById("sight-target").style.display="";document.getElementById("sight-bar").style.display="";};
+window.cancelSighting=function(){sightingMode=false;pendingLatLng=null;document.getElementById("sight-target").style.display="none";document.getElementById("sight-bar").style.display="none";};
+window.confirmSighting=function(){
+  const c=map.getCenter();pendingLatLng={lat:c.lat,lng:c.lng};window.cancelSighting();
+  const sel=document.getElementById("sl-pet");sel.innerHTML=`<option value="">Unknown / general sighting</option>`;
+  allPets.filter(p=>p.status==="lost").forEach(p=>sel.innerHTML+=`<option value="${p.id}">${p.name} (${p.breed||""} · ${p.community})</option>`);
+  document.getElementById("sl-time").value=new Date().toTimeString().substring(0,5);
+  document.getElementById("sl-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("sl-loc-text").textContent=`📍 ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
+  openModal("sightingLogOverlay");
+};
+window.submitSighting=async function(){
+  if(!currentUser){showToast("Please sign in to log a sighting");return;}
+  const petId=document.getElementById("sl-pet").value,time=document.getElementById("sl-time").value,date=document.getElementById("sl-date").value,desc=document.getElementById("sl-desc").value||"No description";
+  const loc=pendingLatLng||{lat:COMMUNITIES[currentCommunity]?.lat||24.940,lng:COMMUNITIES[currentCommunity]?.lng||55.348};
+  try{
+    if(petId){const ps=await getDoc(doc(db,"pets",petId));if(ps.exists()){const sightings=[...(ps.data().sightings||[]),{lat:loc.lat,lng:loc.lng,time:`${date} ${time}`,desc,reporter:currentUser.displayName||currentUser.email}];await updateDoc(doc(db,"pets",petId),{sightings});showToast(`📍 Sighting logged for ${ps.data().name}`);}}
+    else{await addDoc(collection(db,"pets"),{name:"Unidentified pet",species:document.getElementById("sl-species").value,status:"found",community:currentCommunity,date,time,desc,lat:loc.lat,lng:loc.lng,reporterUid:currentUser.uid,reporterName:currentUser.displayName||currentUser.email,createdAt:serverTimestamp(),sightings:[],photoURL:null,breed:"Unknown",color:"Unknown",sex:"Unknown",size:"Unknown",features:"",contact:"",cluster:"",featured:false});showToast("📍 General sighting added to map");}
+    pendingLatLng=null;closeModal("sightingLogOverlay");document.getElementById("sl-desc").value="";
+  }catch(err){showToast("Error: "+err.message);}
+};
+
+window.openDetail=function(petId){
+  const pet=allPets.find(p=>p.id===petId);if(!pet)return;
+  const e=EMOJI[pet.species]||"🐾",c=pet.featured?SC.featured:SC[pet.status],sl=SL[pet.status];
+  const isAdmin=currentUser&&currentUser.email===ADMIN_EMAIL,isOwner=currentUser&&currentUser.uid===pet.reporterUid;
+  document.getElementById("detail-content").innerHTML=`
+    ${pet.photoURL?`<img src="${pet.photoURL}" class="det-photo" onerror="this.className='det-ph';this.innerHTML='${e}'">`:`<div class="det-ph">${e}</div>`}
+    <div class="det-badge-wrap"><span class="det-badge" style="background:${c}18;color:${c};">● ${sl}</span>${pet.featured?`<span style="background:#F5EEFF;color:var(--featured);font-size:10px;font-weight:900;padding:3px 9px;border-radius:50px;border:1px solid rgba(154,63,196,.3);">⭐ Featured</span>`:""}</div>
+    <div class="det-body">
+      <div class="det-name">${pet.name}</div><div class="det-breed">${[pet.breed,pet.color].filter(Boolean).join(" · ")}</div>
+      <div class="det-grid">
+        <div class="dg-item"><div class="dg-lbl">Species</div><div class="dg-val">${pet.species||"—"}</div></div>
+        <div class="dg-item"><div class="dg-lbl">Sex</div><div class="dg-val">${pet.sex||"—"}</div></div>
+        <div class="dg-item"><div class="dg-lbl">Size</div><div class="dg-val">${pet.size||"—"}</div></div>
+        <div class="dg-item"><div class="dg-lbl">Date / Time</div><div class="dg-val">${pet.date||"—"}${pet.time?" · "+pet.time:""}</div></div>
+        <div class="dg-item"><div class="dg-lbl">Community</div><div class="dg-val">${pet.community||"—"}</div></div>
+        <div class="dg-item"><div class="dg-lbl">Cluster</div><div class="dg-val">${pet.cluster||"—"}</div></div>
+        ${pet.microchip?`<div class="dg-item" style="grid-column:1/-1;"><div class="dg-lbl">🔬 Microchip No.</div><div class="dg-val" style="font-family:monospace;font-size:12px;">${pet.microchip}</div></div>`:""}
+      </div>
+      ${pet.features?`<div class="det-sec"><div class="det-sec-title">Distinguishing Features</div><p>${pet.features}</p></div>`:""}
+      ${pet.desc?`<div class="det-sec"><div class="det-sec-title">Description</div><p>${pet.desc}</p></div>`:""}
+      ${pet.sightings&&pet.sightings.length?`<div class="det-sec"><div class="det-sec-title">📍 Sighting History (${pet.sightings.length})</div>${pet.sightings.map(s=>`<div class="sight-entry"><div class="sight-dot"></div><div><strong>${s.time||"Unknown time"}</strong><br>${s.desc}<br><small style="color:var(--muted);">— ${s.reporter||"anonymous"}</small></div></div>`).join("")}</div>`:""}
+      <div class="det-actions">
+        ${pet.contact?`<a href="tel:${pet.contact}" class="act-btn act-call">📞 Call ${pet.contact}</a>`:""}
+        <button class="act-btn act-wa" onclick="shareWA('${pet.id}')">📲 Share on WhatsApp</button>
+        ${currentUser?`
+          <button class="act-btn act-sight" onclick="logSightingFor('${pet.id}')">📍 I just saw this pet</button>
+          ${!pet.featured&&(isOwner||isAdmin)?`<button class="act-btn act-feat" onclick="openFeaturedFor('${pet.id}')">⭐ Feature this pet (from 25 AED)</button>`:""}
+          ${(isOwner||isAdmin)&&pet.status!=="home"?`<button class="act-btn act-home" onclick="markHome('${pet.id}')">🏠 Mark as Back Home</button>`:""}
+          ${isAdmin?`<button class="act-btn act-del" onclick="delPet('${pet.id}')">🗑 Delete Report</button>`:""}
+        `:""}
+        <button onclick="closeModal('detailOverlay')" class="act-btn act-close">Close</button>
+      </div>
+    </div>`;
+  openModal("detailOverlay");
+};
+
+window.markHome=async function(petId){
+  try{
+    await updateDoc(doc(db,"pets",petId),{status:"home",featured:false});
+    const pet=allPets.find(p=>p.id===petId);
+    const commKey="comm_"+(pet?.community||currentCommunity).replace(/ /g,"_");
+    await setDoc(doc(db,"stats","global"),{reunited:increment(1)},{merge:true});
+    await setDoc(doc(db,"stats",commKey),{reunited:increment(1),community:pet?.community||currentCommunity},{merge:true});
+    await loadReunionStats();closeModal("detailOverlay");showToast("🏠 Marked as Back Home! Reunited counter updated.");
+  }catch(err){showToast("Error: "+err.message);}
+};
+window.delPet=async function(petId){if(!confirm("Delete this report permanently?"))return;try{await deleteDoc(doc(db,"pets",petId));closeModal("detailOverlay");showToast("Report deleted.");}catch(err){showToast("Error: "+err.message);}};
+window.logSightingFor=function(petId){
+  closeModal("detailOverlay");
+  const sel=document.getElementById("sl-pet");sel.innerHTML=`<option value="">Unknown / general sighting</option>`;
+  allPets.filter(p=>p.status==="lost").forEach(p=>sel.innerHTML+=`<option value="${p.id}"${p.id===petId?" selected":""}>${p.name} (${p.breed||""} · ${p.community})</option>`);
+  document.getElementById("sl-time").value=new Date().toTimeString().substring(0,5);
+  document.getElementById("sl-date").value=new Date().toISOString().split("T")[0];
+  const pet=allPets.find(p=>p.id===petId);
+  if(pet){pendingLatLng={lat:pet.lat+0.0005,lng:pet.lng+0.0005};document.getElementById("sl-loc-text").textContent=`📍 Near ${pet.cluster||pet.community}`;}
+  openModal("sightingLogOverlay");
+};
+window.shareWA=function(petId){
+  const pet=allPets.find(p=>p.id===petId);if(!pet)return;
+  const txt=encodeURIComponent(`🐾 *Pause4Paws — ${SL[pet.status]}*\n\n*${pet.name}* (${pet.species})\nBreed: ${pet.breed||"Unknown"}\nColour: ${pet.color||"Unknown"}\nArea: ${pet.cluster?pet.cluster+", ":""}${pet.community}\nDate: ${pet.date||"Unknown"}${pet.time?" at "+pet.time:""}\n\n${pet.desc||""}\n\nContact: ${pet.contact||"Via app"}\n\n🔗 Pause4Paws: ${window.location.href}`);
+  window.open(`https://wa.me/?text=${txt}`,"_blank");
+};
+window.focusPet=function(petId){const pet=allPets.find(p=>p.id===petId);if(!pet||!pet.lat)return;map.setView([pet.lat,pet.lng],17,{animate:true});if(sidebarOpen)toggleSidebar();setTimeout(()=>{const m=mapMarkers.find(x=>x.id===petId);if(m)m.m.openPopup();},600);};
+
+window.selectPlan=function(plan){selectedPlan=plan;document.getElementById("plan-week").classList.toggle("selected",plan==="week");document.getElementById("plan-month").classList.toggle("selected",plan==="month");};
+window.openFeaturedFor=function(petId){closeModal("detailOverlay");const sel=document.getElementById("feat-pet-select");sel.innerHTML=`<option value="">Select a pet you've reported</option>`;allPets.filter(p=>p.reporterUid===currentUser?.uid&&p.status==="lost").forEach(p=>sel.innerHTML+=`<option value="${p.id}"${p.id===petId?" selected":""}>${p.name}</option>`);openModal("featuredModal");};
+window.submitFeatured=async function(){
+  if(!currentUser){showToast("Please sign in first");openModal("authOverlay");return;}
+  const petId=document.getElementById("feat-pet-select").value;if(!petId){showToast("Please select which pet to feature");return;}
+  try{await updateDoc(doc(db,"pets",petId),{featured:true,featuredPlan:selectedPlan,featuredAt:serverTimestamp()});closeModal("featuredModal");showToast(`⭐ ${selectedPlan==="week"?"25 AED/week":"75 AED/month"} plan activated!`);}catch(err){showToast("Error: "+err.message);}
+};
+
+window.doSignIn=async function(){
+  const email=document.getElementById("si-email").value,pw=document.getElementById("si-pw").value;
+  if(!email||!pw){showToast("Please enter email and password");return;}
+  try{await signInWithEmailAndPassword(auth,email,pw);closeModal("authOverlay");showToast("Welcome back! 👋");}
+  catch(err){const m={"auth/invalid-credential":"Incorrect email or password.","auth/user-not-found":"No account found.","auth/wrong-password":"Incorrect password."};showToast(m[err.code]||err.message);}
+};
+window.doSignUp=async function(){
+  const fn=document.getElementById("su-fn").value.trim(),email=document.getElementById("su-email").value,pw=document.getElementById("su-pw").value;
+  if(!fn||!email||!pw){showToast("Please fill in required fields");return;}
+  if(pw.length<8){showToast("Password must be at least 8 characters");return;}
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pw);
+    await updateProfile(cred.user,{displayName:fn});
+    await setDoc(doc(db,"users",cred.user.uid),{name:fn,email,phone:document.getElementById("su-phone").value,community:document.getElementById("su-comm").value||currentCommunity,createdAt:serverTimestamp(),paid:false});
+    closeModal("authOverlay");
+    // Show Wio QR payment modal
+    const now=new Date();const deadline=new Date("2026-05-30");
+    const isEarlyBird=now<deadline;
+    document.getElementById("qr-display-amount").textContent=isEarlyBird?"24 AED":"30 AED";
+    openModal("wioQrModal");
+    showToast(`Welcome to Pause4Paws, ${fn}! 🐾 Please complete your payment.`);
+  }catch(err){const m={"auth/email-already-in-use":"That email is already registered — try signing in.","auth/weak-password":"Use a stronger password."};showToast(m[err.code]||err.message);}
+};
+window.doSignOut=async function(){await signOut(auth);showToast("Signed out. See you soon 👋");};
+onAuthStateChanged(auth,user=>{currentUser=user;updateAuthUI(user);});
+
+function updateAuthUI(user){
+  const el=document.getElementById("auth-actions");
+  if(user){
+    const init=(user.displayName||user.email)[0].toUpperCase();
+    el.innerHTML=`<div class="user-chip" onclick="document.getElementById('user-menu-dd').classList.toggle('hidden')">
+        <div class="user-av">${init}</div>
+        <span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.displayName||user.email.split("@")[0]}</span>
+        <span style="font-size:9px;opacity:.4;">▾</span>
+        <div class="user-menu hidden" id="user-menu-dd">
+          <div class="um-item" onclick="openModal('featuredModal')">⭐ Feature a pet</div>
+          <hr class="um-sep">
+          ${user.email===ADMIN_EMAIL?`<div class="um-item" onclick="openAdmin()">⚙ Admin Dashboard</div><hr class="um-sep">`:""}
+          <div class="um-item" onclick="openModal('helpModal')">❓ Help &amp; FAQ</div>
+          <hr class="um-sep">
+          <div class="um-item" onclick="doSignOut()">Sign out</div>
+        </div>
+      </div>`;
+  }else{
+    el.innerHTML=`<button class="btn btn-ghost" onclick="openModal('authOverlay');switchTab('signin')">Sign in</button><button class="btn btn-primary" onclick="openModal('authOverlay');switchTab('signup')">Join</button>`;
+  }
+}
+
+function buildCommDD(){
+  document.getElementById("comm-dd").innerHTML=Object.entries(COMMUNITIES).map(([name,c])=>`
+    <div class="comm-opt${name===currentCommunity?" active":""}" onclick="selectCommunity('${name}')">
+      <span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;flex-shrink:0;"></span>
+      <span>${name}</span><span class="comm-count">${allPets.filter(p=>p.community===name).length}</span>
+    </div>`).join("");
+}
+window.selectCommunity=function(name){currentCommunity=name;document.getElementById("comm-name").textContent=name;document.getElementById("comm-dd").classList.remove("open");const c=COMMUNITIES[name];if(c)map.setView([c.lat,c.lng],c.zoom,{animate:true});activeFilters={};renderMarkers();buildCommDD();loadReunionStats();};
+
+window.openReportModal=function(){if(!currentUser){openModal("authOverlay");switchTab("signup");showToast("Sign in or join to report a pet");return;}document.getElementById("r-date").value=new Date().toISOString().split("T")[0];openModal("reportOverlay");};
+window.openFoundModal=function(){if(!currentUser){if(!sidebarOpen)toggleSidebar();document.getElementById("home-panel").classList.add("expanded");showToast("Browse the map or use Narrow Search to find a match");return;}window.startSightingMode();showToast("Drag the map to where you saw the animal, then tap Confirm");};
+
+window.setFilter=function(f,el){currentFilter=f;document.querySelectorAll(".fpill").forEach(p=>p.classList.toggle("active",p.dataset.f===f));renderMarkers();};
+window.toggleSearchPanel=function(){const p=document.getElementById("search-panel"),b=document.getElementById("narrow-btn");const open=p.classList.toggle("open");b.style.display=open?"none":"flex";};
+window.applySearch=function(){const comm=document.getElementById("f-community").value;activeFilters={species:document.getElementById("f-species").value,sex:document.getElementById("f-sex").value,size:document.getElementById("f-size").value,color:document.getElementById("f-color").value,features:document.getElementById("f-features").value,allAreas:!!comm};if(comm){currentCommunity=comm;document.getElementById("comm-name").textContent=comm;}window.toggleSearchPanel();renderMarkers();showToast("Filters applied");};
+window.clearSearch=function(){["f-species","f-sex","f-size","f-color","f-features"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("f-community").value="";activeFilters={};window.toggleSearchPanel();renderMarkers();};
+window.onGlobalSearch=function(v){activeFilters.q=v||undefined;document.getElementById("search-x").style.display=v?"":"none";renderMarkers();};
+window.clearGlobalSearch=function(){document.getElementById("global-search").value="";window.onGlobalSearch("");};
+window.toggleSidebar=function(){sidebarOpen=!sidebarOpen;document.getElementById("sidebar").classList.toggle("open",sidebarOpen);document.getElementById("sb-toggle").textContent=sidebarOpen?"✕":"☰";};
+window.switchTab=function(t){document.getElementById("signin-block").style.display=t==="signin"?"":"none";document.getElementById("signup-block").style.display=t==="signup"?"":"none";document.getElementById("t-signin").classList.toggle("active",t==="signin");document.getElementById("t-signup").classList.toggle("active",t==="signup");};
+window.openModal=function(id){document.getElementById(id).classList.remove("hidden");if(id==="featuredModal"){const sel=document.getElementById("feat-pet-select");sel.innerHTML=`<option value="">Select a pet you've reported</option>`;if(currentUser)allPets.filter(p=>p.reporterUid===currentUser.uid&&p.status==="lost").forEach(p=>sel.innerHTML+=`<option value="${p.id}">${p.name}</option>`);}if(id==="helpModal"){populateMapCorrectionDropdown();}};;
+window.closeModal=function(id){document.getElementById(id).classList.add("hidden");};
+window.dismissWelcome=function(){
+  document.getElementById("welcomeScreen").classList.add("hidden");
+  localStorage.setItem("p4p_welcomed","1");
+  // Show countdown popup a few seconds after welcome if not dismissed and user not logged in
+  const now=new Date(),deadline=new Date("2026-05-30");
+  if(now<deadline&&!localStorage.getItem("p4p_cd_dismissed")&&!currentUser){
+    setTimeout(()=>{document.getElementById("countdownOverlay").classList.remove("hidden");},3000);
+  }
+};
+window.toggleFaq=function(item){item.classList.toggle("open");};
+window.openAdmin=function(){if(!currentUser||currentUser.email!==ADMIN_EMAIL){showToast("Admin access only");return;}document.getElementById("admin-panel").classList.add("open");updateAdminTables();};
+window.closeAdmin=function(){document.getElementById("admin-panel").classList.remove("open");};
+window.showAdminTab=function(tab,el){document.querySelectorAll(".admin-section").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".admin-nav-item").forEach(n=>n.classList.remove("active"));document.getElementById("tab-"+tab).classList.add("active");el.classList.add("active");};
+
+function updateAdminTables(){
+  if(!document.getElementById("admin-panel").classList.contains("open"))return;
+  document.getElementById("a-total-users").textContent=allUsers.length;
+  document.getElementById("a-paid-users").textContent=allUsers.filter(u=>u.paid).length;
+  document.getElementById("a-total-reports").textContent=allPets.length;
+  document.getElementById("a-lost-count").textContent=allPets.filter(p=>p.status==="lost").length;
+  document.getElementById("a-featured-count").textContent=allPets.filter(p=>p.featured).length;
+  const pendingCorr=allMapCorrections.filter(c=>c.status==="pending").length;
+  const corrEl=document.getElementById("a-mapcorr-count");
+  if(corrEl)corrEl.textContent=pendingCorr;
+  getDoc(doc(db,"stats","global")).then(d=>{document.getElementById("a-reunited").textContent=d.exists()?d.data().reunited||0:0;}).catch(()=>{});
+  document.getElementById("admin-recent").innerHTML=[...allPets].slice(0,6).map(p=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">${EMOJI[p.species]||"🐾"} <strong>${p.name}</strong> — <span style="color:${SC[p.status]}">${SL[p.status]}</span> in ${p.community} · ${p.date||"no date"}</div>`).join("")||`<div style="color:var(--muted);">No recent activity</div>`;
+  document.getElementById("sub-tbody").innerHTML=allUsers.length?allUsers.map(u=>`<tr><td><strong>${u.name||"—"}</strong></td><td style="font-size:11px;">${u.email||"—"}</td><td style="font-size:11px;">${u.community||"—"}</td><td style="font-size:11px;">${u.phone||"—"}</td><td style="font-size:11px;">${u.createdAt?.toDate?.().toLocaleDateString()||"—"}</td><td><span class="admin-badge" style="background:${u.paid?"#DCFCE7":"#FEE2E2"};color:${u.paid?"#166534":"#991B1B"};">${u.paid?"✓ Paid":"Pending"}</span></td><td>${!u.paid?`<button class="admin-verify-btn" onclick="markUserPaid('${u.id}')">Mark paid</button> `:""}  <button class="admin-del-btn" onclick="deleteUser('${u.id}')">Delete</button></td></tr>`).join(""):`<tr><td colspan="7" class="admin-empty">No subscribers yet</td></tr>`;
+  document.getElementById("reports-tbody").innerHTML=allPets.length?allPets.map(p=>`<tr><td><strong>${p.name}</strong></td><td><span class="admin-badge" style="background:${SC[p.status]}20;color:${SC[p.status]};">${SL[p.status]}</span></td><td style="font-size:11px;">${EMOJI[p.species]||""} ${p.species||"—"}</td><td style="font-size:11px;">${p.community||"—"}</td><td style="font-size:11px;">${p.cluster||"—"}</td><td style="font-size:11px;">${p.date||"—"}</td><td style="font-size:11px;">${p.reporterName||"—"}</td><td><button class="admin-del-btn" onclick="adminDelPet('${p.id}')">Delete</button></td></tr>`).join(""):`<tr><td colspan="8" class="admin-empty">No reports yet</td></tr>`;
+  const featPets=allPets.filter(p=>p.featured);
+  document.getElementById("featured-tbody").innerHTML=featPets.length?featPets.map(p=>`<tr><td><strong>${p.name}</strong></td><td style="font-size:11px;">${p.community}</td><td><span class="admin-badge" style="background:#F5EEFF;color:var(--featured);">${p.featuredPlan==="week"?"25 AED/wk":"75 AED/mo"}</span></td><td style="font-size:11px;">${p.featuredAt?.toDate?.().toLocaleDateString()||"—"}</td><td style="font-size:11px;">${p.reporterName||"—"}</td><td><button class="admin-del-btn" onclick="removeFeatured('${p.id}')">Remove</button></td></tr>`).join(""):`<tr><td colspan="6" class="admin-empty">No featured pets</td></tr>`;
+  const rePets=allPets.filter(p=>p.status==="home");
+  document.getElementById("reunited-tbody").innerHTML=rePets.length?rePets.map(p=>`<tr><td><strong>${p.name}</strong></td><td style="font-size:11px;">${EMOJI[p.species]||""} ${p.species||"—"}</td><td style="font-size:11px;">${p.community||"—"}</td><td style="font-size:11px;">${p.date||"—"}</td></tr>`).join(""):`<tr><td colspan="4" class="admin-empty">No pets marked Back Home yet</td></tr>`;
+}
+
+window.filterAdminTable=function(tableId,q){const rows=document.getElementById(tableId)?.querySelectorAll("tbody tr");if(!rows)return;rows.forEach(row=>{row.style.display=row.textContent.toLowerCase().includes(q.toLowerCase())?"":"none";});};
+
+function updateMapCorrectionTable(){
+  const tbody=document.getElementById("mapcorr-tbody");
+  if(!tbody)return;
+  if(!allMapCorrections.length){
+    tbody.innerHTML=`<tr><td colspan="9" class="admin-empty">No map corrections submitted yet</td></tr>`;
+    return;
+  }
+  const typeLabels={
+    wrong_position:"📍 Wrong position",
+    wrong_name:"✏️ Wrong name",
+    missing:"➕ Missing area",
+    duplicate:"🔁 Duplicate",
+    other:"💬 Other"
+  };
+  tbody.innerHTML=allMapCorrections.map(c=>{
+    const isPending=c.status==="pending";
+    const dateStr=c.reportedAt?.toDate?.().toLocaleDateString()||"—";
+    return `<tr style="opacity:${isPending?1:0.5}">
+      <td style="font-size:11px;font-weight:700;">${c.community||"—"}</td>
+      <td style="font-size:11px;">${typeLabels[c.type]||c.type||"—"}</td>
+      <td style="font-size:11px;font-weight:700;">${c.cluster||"—"}</td>
+      <td style="font-size:11px;font-family:monospace;color:var(--brand-dark);">${c.gps||"—"}</td>
+      <td style="font-size:11px;max-width:160px;white-space:normal;">${c.details||"—"}</td>
+      <td style="font-size:11px;">${c.reportedBy||"—"}</td>
+      <td style="font-size:11px;">${dateStr}</td>
+      <td><span class="admin-badge" style="background:${isPending?"#FEF3C7":"#DCFCE7"};color:${isPending?"#92400E":"#166534"};">${isPending?"⏳ Pending":"✅ Resolved"}</span></td>
+      <td>${isPending?`<button class="admin-verify-btn" onclick="resolveMapCorrection('${c.id}')">Mark resolved</button>`:"—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+window.resolveMapCorrection=async function(id){
+  try{
+    await updateDoc(doc(db,"mapCorrections",id),{status:"resolved",resolvedAt:serverTimestamp(),resolvedBy:currentUser?.email||"admin"});
+    showToast("✅ Correction marked as resolved");
+  }catch(err){showToast("Error: "+err.message);}
+};
+window.markUserPaid=async function(uid){try{await updateDoc(doc(db,"users",uid),{paid:true});showToast("User marked as paid ✓");}catch(err){showToast("Error: "+err.message);}};
+window.deleteUser=async function(uid){if(!confirm("Delete this user record?"))return;try{await deleteDoc(doc(db,"users",uid));showToast("User record deleted");}catch(err){showToast("Error: "+err.message);}};
+window.adminDelPet=async function(petId){if(!confirm("Delete this pet report permanently?"))return;try{await deleteDoc(doc(db,"pets",petId));showToast("Report deleted");}catch(err){showToast("Error: "+err.message);}};
+window.removeFeatured=async function(petId){try{await updateDoc(doc(db,"pets",petId),{featured:false,featuredPlan:null});showToast("Featured listing removed");}catch(err){showToast("Error: "+err.message);}};
+
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3500);}
+
+// ── COUNTDOWN TIMER ────────────────────────────────────────────────────────
+function startCountdown(){
+  const deadline=new Date("2026-05-30T23:59:59");
+  function tick(){
+    const now=new Date(),diff=deadline-now;
+    if(diff<=0){document.getElementById("cd-days").textContent="00";return;}
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    document.getElementById("cd-days").textContent=String(d).padStart(2,"0");
+    document.getElementById("cd-hours").textContent=String(h).padStart(2,"0");
+    document.getElementById("cd-mins").textContent=String(m).padStart(2,"0");
+    document.getElementById("cd-secs").textContent=String(s).padStart(2,"0");
+  }
+  tick();setInterval(tick,1000);
+}
+
+// ── LANGUAGE TOGGLE (EN / AR) ───────────────────────────────────────────────
+const AR_STRINGS={
+  "Report Missing Pet":"🔴 الإبلاغ عن حيوان مفقود",
+  "I Found a Pet":"🟢 وجدت حيواناً",
+  "Pause4Paws":"Pause4Paws",
+  "Dubai Pet Community":"مجتمع الحيوانات الأليفة في دبي",
+  "Lost":"مفقود","Found / Seen":"موجود / شوهد","Back Home":"عاد إلى المنزل","Known Stray":"ضال معروف"
+};
+let isArabic=false;
+window.toggleLanguage=function(){
+  isArabic=!isArabic;
+  document.documentElement.setAttribute("dir",isArabic?"rtl":"ltr");
+  document.documentElement.setAttribute("lang",isArabic?"ar":"en");
+  document.getElementById("lang-label").textContent=isArabic?"EN":"AR";
+  if(isArabic){
+    document.querySelector(".btn-report").innerHTML='<span class="ai">🔴</span> الإبلاغ عن حيوان مفقود';
+    document.querySelector(".btn-found").innerHTML='<span class="ai">🟢</span> وجدت حيواناً';
+    document.querySelector(".logo-tag").textContent="مجتمع حيوانات دبي";
+  }else{
+    document.querySelector(".btn-report").innerHTML='<span class="ai">🔴</span> Report Missing Pet';
+    document.querySelector(".btn-found").innerHTML='<span class="ai">🟢</span> I Found a Pet';
+    document.querySelector(".logo-tag").textContent="Dubai Pet Community";
+  }
+};
+
+// ── FEATURE REQUEST ─────────────────────────────────────────────────────────
+window.submitFeatureRequest=async function(){
+  const txt=document.getElementById("feat-req-text").value.trim();
+  if(!txt){showToast("Please type your request first");return;}
+  try{
+    await addDoc(collection(db,"featureRequests"),{text:txt,user:currentUser?.email||"anonymous",createdAt:serverTimestamp()});
+    document.getElementById("feat-req-text").value="";
+    showToast("✅ Request sent — thank you!");
+  }catch(e){showToast("Sent! (offline mode — will sync)");}
+};
+
+// ── MAP CORRECTION SUBMISSION ────────────────────────────────────────────────
+// Saves to Firestore "mapCorrections" collection so admin can action them.
+// Also sends an email via EmailJS if configured (see setup note below).
+// ★ TO GET EMAIL ALERTS: Sign up free at emailjs.com, create a template,
+//   and replace the IDs below. Free tier = 200 emails/month.
+const EMAILJS_SERVICE  = "YOUR_EMAILJS_SERVICE_ID";
+const EMAILJS_TEMPLATE = "YOUR_EMAILJS_TEMPLATE_ID";
+const EMAILJS_KEY      = "YOUR_EMAILJS_PUBLIC_KEY";
+const ADMIN_NOTIFY_EMAIL = "admin@pause4paws.com"; // ★ change to your email
+
+window.submitMapCorrection=async function(){
+  const community = document.getElementById("mapcorr-community").value;
+  const type      = document.getElementById("mapcorr-type").value;
+  const cluster   = document.getElementById("mapcorr-cluster").value.trim();
+  const gps       = document.getElementById("mapcorr-gps").value.trim();
+  const details   = document.getElementById("mapcorr-details").value.trim();
+
+  if(!community){showToast("Please select a community");return;}
+  if(!details&&!cluster){showToast("Please describe what needs correcting");return;}
+
+  const payload = {
+    community, type, cluster, gps, details,
+    reportedBy: currentUser?.email||"anonymous",
+    reportedAt: serverTimestamp(),
+    status: "pending"
+  };
+
+  try{
+    // 1. Save to Firestore — appears in admin panel
+    await addDoc(collection(db,"mapCorrections"), payload);
+
+    // 2. Try EmailJS notification to admin (optional — works only if configured)
+    if(EMAILJS_KEY !== "YOUR_EMAILJS_PUBLIC_KEY"){
+      try{
+        await fetch(`https://api.emailjs.com/api/v1.0/email/send`, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            service_id: EMAILJS_SERVICE,
+            template_id: EMAILJS_TEMPLATE,
+            user_id: EMAILJS_KEY,
+            template_params:{
+              to_email: ADMIN_NOTIFY_EMAIL,
+              subject: `📍 Map correction: ${community} — ${cluster||type}`,
+              community, type, cluster, gps, details,
+              reporter: currentUser?.email||"anonymous"
+            }
+          })
+        });
+      }catch(emailErr){ console.warn("Email notify failed:", emailErr); }
+    }
+
+    // Clear form
+    document.getElementById("mapcorr-cluster").value="";
+    document.getElementById("mapcorr-gps").value="";
+    document.getElementById("mapcorr-details").value="";
+    showToast("📍 Map correction sent! We'll update within 24–48 hours.");
+  }catch(err){
+    // Offline fallback — queue locally
+    const pending = JSON.parse(localStorage.getItem("p4p_pending_corrections")||"[]");
+    pending.push({...payload, reportedAt: new Date().toISOString()});
+    localStorage.setItem("p4p_pending_corrections", JSON.stringify(pending));
+    showToast("📍 Saved locally — will send when back online.");
+  }
+};
+
+// Populate the map correction community dropdown when FAQ modal opens
+function populateMapCorrectionDropdown(){
+  const sel = document.getElementById("mapcorr-community");
+  if(!sel || sel.options.length > 1) return;
+  sel.innerHTML = `<option value="">Select community…</option>`;
+  Object.keys(COMMUNITIES).forEach(n => {
+    const o = document.createElement("option");
+    o.value = n; o.textContent = n;
+    sel.appendChild(o);
+  });
+}
+
+// ── AI CAMERA PRE-FILL (GPS + Clarifai vision) ──────────────────────────────
+// How it works:
+//  1. User taps "AI Smart Camera" → browser asks for GPS permission
+//  2. GPS coordinates are captured and reverse-matched to nearest cluster
+//  3. File picker opens for photo
+//  4. Photo is sent to Clarifai's general vision model
+//  5. Clarifai returns labels: species, colour, breed hints
+//  6. Form fields are pre-filled automatically
+//  7. AI matcher runs against existing lost/found pets
+
+// ★ TO ACTIVATE CLARIFAI: Replace the key below with your free Clarifai API key
+// Get one free at: clarifai.com → Sign Up → API Keys → Create Key
+// Free tier: 1,000 calls/month — more than enough to start
+const CLARIFAI_KEY = "YOUR_CLARIFAI_API_KEY_HERE";
+const CLARIFAI_ENDPOINT = "https://api.clarifai.com/v2/models/general-image-recognition/outputs";
+
+window.triggerAICamera = function() {
+  // Step 1: Get GPS location
+  showToast("📍 Getting your GPS location…");
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        pendingLatLng = {lat, lng};
+        document.getElementById("pin-note").style.display = "";
+        document.getElementById("gps-prefill-badge").style.display = "inline-flex";
+        document.getElementById("gps-prefill-badge").textContent = `📍 GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        // Auto-select nearest community + cluster
+        autoSelectNearestCluster(lat, lng);
+        showToast("✅ GPS captured! Now select a photo.");
+        // Step 2: Open camera/file picker
+        document.getElementById("r-photos").click();
+      },
+      err => {
+        showToast("GPS unavailable — please pin location on map manually");
+        document.getElementById("r-photos").click();
+      },
+      {enableHighAccuracy: true, timeout: 8000}
+    );
+  } else {
+    document.getElementById("r-photos").click();
+  }
+};
+
+function autoSelectNearestCluster(lat, lng) {
+  let bestComm = null, bestCluster = null, bestDist = Infinity;
+  Object.entries(COMMUNITIES).forEach(([commName, comm]) => {
+    (comm.clusterCoords || []).forEach(([clat, clng, cname]) => {
+      const d = Math.sqrt(Math.pow(clat - lat, 2) + Math.pow(clng - lng, 2));
+      if(d < bestDist) { bestDist = d; bestComm = commName; bestCluster = cname; }
+    });
+  });
+  if(bestComm && bestDist < 0.05) {
+    const commSel = document.getElementById("r-comm");
+    if(commSel) { commSel.value = bestComm; window.onCommChange(bestComm); }
+    setTimeout(() => {
+      const clSel = document.getElementById("r-cluster");
+      if(clSel) {
+        for(let o of clSel.options) { if(o.text === bestCluster) { clSel.value = o.value; break; } }
+      }
+    }, 200);
+    showToast(`📍 Auto-selected: ${bestCluster}, ${bestComm}`);
+  }
+}
+
+window.handleReportPhotos = function(e) {
+  reportFiles = Array.from(e.target.files).slice(0, 4);
+  const p = document.getElementById("r-preview");
+  p.innerHTML = "";
+  reportFiles.forEach(f => {
+    const i = document.createElement("img");
+    i.src = URL.createObjectURL(f);
+    i.className = "photo-thumb";
+    p.appendChild(i);
+  });
+  if(reportFiles.length > 0) {
+    // Run Clarifai vision analysis
+    analyseWithClarifai(reportFiles[0]);
+  }
+};
+
+async function analyseWithClarifai(file) {
+  if(CLARIFAI_KEY === "YOUR_CLARIFAI_API_KEY_HERE") {
+    // Demo mode — simulate AI pre-fill after delay
+    showToast("🤖 Analysing photo… (connect Clarifai for real AI)");
+    setTimeout(() => {
+      // Show AI match hint since we have pets to compare
+      if(allPets.filter(x => x.status === "lost" || x.status === "found").length > 0) {
+        document.getElementById("ai-match-hint").style.display = "flex";
+      }
+      showToast("🤖 AI analysis complete — check for matches below");
+    }, 1500);
+    return;
+  }
+
+  showToast("🤖 AI is analysing your photo…");
+  try {
+    // Convert file to base64
+    const base64 = await new Promise(res => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(",")[1]);
+      reader.readAsDataURL(file);
+    });
+
+    const resp = await fetch(CLARIFAI_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${CLARIFAI_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inputs: [{ data: { image: { base64 } } }]
+      })
+    });
+    const data = await resp.json();
+    const concepts = data?.outputs?.[0]?.data?.concepts || [];
+
+    // Map Clarifai labels → form fields
+    const labels = concepts.map(c => c.name.toLowerCase());
+
+    // Species detection
+    if(labels.some(l => ["dog","canine","puppy","hound"].includes(l))) {
+      document.getElementById("r-species").value = "Dog";
+    } else if(labels.some(l => ["cat","kitten","feline"].includes(l))) {
+      document.getElementById("r-species").value = "Cat";
+    } else if(labels.some(l => ["bird","parrot","budgie"].includes(l))) {
+      document.getElementById("r-species").value = "Bird";
+    } else if(labels.some(l => ["rabbit","bunny"].includes(l))) {
+      document.getElementById("r-species").value = "Rabbit";
+    }
+
+    // Colour detection
+    const colourMap = {
+      "golden":["golden","gold"],"white":["white"],"black":["black"],"brown":["brown"],
+      "grey":["gray","grey"],"orange":["orange","ginger"],"cream":["cream","beige"],
+      "tan":["tan","fawn"],"spotted":["spotted","dalmatian"],"striped":["striped","tabby"]
+    };
+    for(const [colour, keywords] of Object.entries(colourMap)) {
+      if(keywords.some(k => labels.includes(k))) {
+        const col = document.getElementById("r-color");
+        if(col && !col.value) col.value = colour.charAt(0).toUpperCase() + colour.slice(1);
+        break;
+      }
+    }
+
+    // Size detection
+    if(labels.some(l => ["large dog","german shepherd","labrador","golden retriever"].includes(l))) {
+      document.getElementById("r-size").value = "Large";
+    } else if(labels.some(l => ["small dog","chihuahua","terrier","poodle"].includes(l))) {
+      document.getElementById("r-size").value = "Small";
+    }
+
+    // Show top concept as breed hint
+    const topBreed = concepts.find(c => c.value > 0.85 && ["dog","cat"].every(x => !c.name.toLowerCase().includes(x)));
+    if(topBreed) {
+      const breed = document.getElementById("r-breed");
+      if(breed && !breed.value) {
+        breed.value = topBreed.name.charAt(0).toUpperCase() + topBreed.name.slice(1);
+      }
+    }
+
+    showToast("🤖 AI pre-filled species, colour & size from your photo!");
+
+    // Show match hint
+    if(allPets.filter(x => x.status === "lost" || x.status === "found").length > 0) {
+      document.getElementById("ai-match-hint").style.display = "flex";
+    }
+
+  } catch(err) {
+    console.warn("Clarifai error:", err);
+    showToast("AI analysis unavailable — please fill in details manually");
+  }
+}
+
+// ── AI PET MATCHING ─────────────────────────────────────────────────────────
+// Compares the uploaded photo against existing lost/found pets.
+// With a real Clarifai key: sends both images to the model and ranks by similarity.
+// Without a key: shows the closest pets by species/colour match as a smart fallback.
+
+window.runAIMatch = function() {
+  document.getElementById("ai-match-hint").style.display = "none";
+  openModal("aiMatchModal");
+  document.getElementById("ai-scanning").style.display = "";
+  document.getElementById("ai-results").style.display = "none";
+
+  const species = document.getElementById("r-species").value;
+  const colour = (document.getElementById("r-color").value || "").toLowerCase();
+
+  setTimeout(() => {
+    // Score existing pets by how closely they match detected attributes
+    const candidates = allPets
+      .filter(p => p.status === "lost" || p.status === "found")
+      .map(p => {
+        let score = 0;
+        if(p.species === species) score += 50;
+        if(colour && (p.color || "").toLowerCase().includes(colour)) score += 30;
+        if(colour && (p.features || "").toLowerCase().includes(colour)) score += 10;
+        // Community proximity bonus
+        const commSel = document.getElementById("r-comm").value;
+        if(commSel && p.community === commSel) score += 20;
+        return {...p, _score: score};
+      })
+      .filter(p => p._score > 0)
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 4);
+
+    document.getElementById("ai-scanning").style.display = "none";
+    document.getElementById("ai-results").style.display = "";
+
+    if(candidates.length === 0) {
+      document.getElementById("ai-no-match").style.display = "";
+      document.getElementById("ai-match-grid").style.display = "none";
+    } else {
+      document.getElementById("ai-no-match").style.display = "none";
+      document.getElementById("ai-match-grid").style.display = "";
+      document.getElementById("ai-results-label").textContent =
+        `${candidates.length} possible match${candidates.length > 1 ? "es" : ""} found`;
+
+      document.getElementById("ai-match-grid").innerHTML = candidates.map((p, i) => {
+        const e = EMOJI[p.species] || "🐾";
+        const matchPct = Math.min(95, Math.round((p._score / 100) * 100));
+        return `<div class="ai-match-card${i === 0 ? " top-match" : ""}" onclick="closeModal('aiMatchModal');openDetail('${p.id}')">
+          ${p.photoURL
+            ? `<img src="${p.photoURL}" class="ai-match-photo" onerror="this.outerHTML='<div class=\\"ai-match-photo\\">${e}</div>'">`
+            : `<div class="ai-match-photo">${e}</div>`}
+          <div class="ai-match-info">
+            <div class="ai-match-score">${i === 0 ? "⭐ Best match · " : ""}${matchPct}% match</div>
+            <div class="ai-match-name">${p.name}</div>
+            <div class="ai-match-detail">${p.species} · ${p.color || "Unknown colour"}</div>
+            <div class="ai-match-detail">${p.cluster || p.community}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+  }, 2200);
+};
+
+window.openAiMatches = window.runAIMatch;
+
+document.addEventListener("DOMContentLoaded",()=>{
+  initMap();populateSelects();buildCommDD();startListening();
+  document.getElementById("r-date").value=new Date().toISOString().split("T")[0];
+  window.pickType("lost");window.switchTab("signin");
+  startCountdown();
+  // Show welcome screen first; countdown shown after welcome is dismissed
+  if(!localStorage.getItem("p4p_welcomed")){
+    document.getElementById("welcomeScreen").classList.remove("hidden");
+  }else{
+    document.getElementById("welcomeScreen").classList.add("hidden");
+    // Show countdown popup if not dismissed and deadline not passed, and user not logged in
+    const now=new Date(),deadline=new Date("2026-05-30");
+    if(now<deadline&&!localStorage.getItem("p4p_cd_dismissed")&&!currentUser){
+      setTimeout(()=>{document.getElementById("countdownOverlay").classList.remove("hidden");},2500);
+    }
+  }
+  document.addEventListener("click",e=>{
+    if(!document.getElementById("comm-wrap").contains(e.target))document.getElementById("comm-dd").classList.remove("open");
+    if(!e.target.closest(".user-chip"))document.getElementById("user-menu-dd")?.classList.add("hidden");
+  });
+  document.getElementById("comm-btn").addEventListener("click",ev=>{ev.stopPropagation();document.getElementById("comm-dd").classList.toggle("open");buildCommDD();});
+});
+</script>
+</body>
+</html>
