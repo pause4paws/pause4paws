@@ -164,7 +164,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
 .fpill.fl-lost.active{border-color:var(--lost);}
 .fpill.fl-found.active{border-color:var(--found);}
 .fpill.fl-home.active{border-color:var(--home);}
-.fpill.fl-stray.active{border-color:var(--stray);}
+.fpill.fl-stray.active{border-color:var(--stray);background:white;color:#111;}
 
 /* ── NARROW SEARCH ──────────────────────────────────────────────────────── */
 .narrow-btn{
@@ -638,7 +638,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
 
 <!-- ── TOPBAR ── -->
 <div class="topbar">
-  <a class="logo" href="#">
+  <a class="logo" href="#" onclick="if(typeof map!=='undefined'){map.setView([COMMUNITIES[currentCommunity].lat,COMMUNITIES[currentCommunity].lng],COMMUNITIES[currentCommunity].zoom,{animate:true});}document.getElementById('home-panel').classList.remove('expanded');return false;">
     <div class="logo-icon"><img src="pause4paws_logo.png" style="width:30px;height:30px;border-radius:6px;object-fit:cover;" onerror="this.outerHTML='<span style=font-size:20px>🐾</span>'"></div>
     <div class="logo-words">
       <div class="logo-name">Pause4Paws</div>
@@ -1738,7 +1738,7 @@ function initMap(){
 function drawZones(){
   Object.entries(COMMUNITIES).forEach(([name,comm])=>{
     (comm.clusterCoords||[]).forEach(([lat,lng,cl])=>{
-      L.circle([lat,lng],{radius:160,color:comm.color,fillColor:comm.color,fillOpacity:0.09,weight:1.5,dashArray:"4,6"})
+      const zonePets=allPets.filter(p=>p.community===name&&p.cluster===cl);const zoneColor=zonePets.length?SC[zonePets.sort((a,b)=>['lost','found','stray','home'].indexOf(a.status)-['lost','found','stray','home'].indexOf(b.status))[0].status]||comm.color:comm.color;L.circle([lat,lng],{radius:160,color:zoneColor,fillColor:zoneColor,fillOpacity:0.09,weight:1.5,dashArray:"4,6"})
         .addTo(map).on("click",()=>zoneClick(name,cl,lat,lng));
       const tt=L.tooltip({permanent:true,direction:"center",className:"zone-lbl",interactive:false}).setContent(cl).setLatLng([lat,lng]);
       zoneTooltips.push(tt);
@@ -2688,7 +2688,7 @@ window.applySearch=function(){const comm=document.getElementById("f-community").
 window.clearSearch=function(){["f-species","f-sex","f-size","f-color","f-features"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("f-community").value="";activeFilters={};window.toggleSearchPanel();renderMarkers();};
 window.onGlobalSearch=function(v){activeFilters.q=v||undefined;document.getElementById("search-x").style.display=v?"":"none";renderMarkers();};
 window.clearGlobalSearch=function(){document.getElementById("global-search").value="";window.onGlobalSearch("");};
-window.toggleSidebar=function(){sidebarOpen=!sidebarOpen;document.getElementById("sidebar").classList.toggle("open",sidebarOpen);document.getElementById("sidebar-backdrop").classList.toggle("show",sidebarOpen);document.getElementById("sb-toggle").textContent=sidebarOpen?"✕":"☰";if(sidebarOpen)renderSidebar(filteredPets());};
+window.toggleSidebar=function(){sidebarOpen=!sidebarOpen;document.getElementById("sidebar").classList.toggle("open",sidebarOpen);document.getElementById("sidebar-backdrop").classList.toggle("show",sidebarOpen);document.getElementById("sb-toggle").textContent=sidebarOpen?'✕':'☰';document.getElementById('auth-actions').style.display=sidebarOpen?'none':'flex';if(sidebarOpen)renderSidebar(filteredPets());};
 window.switchTab=function(t){document.getElementById("signin-block").style.display=t==="signin"?"":"none";document.getElementById("signup-block").style.display=t==="signup"?"":"none";document.getElementById("t-signin").classList.toggle("active",t==="signin");document.getElementById("t-signup").classList.toggle("active",t==="signup");};
 window.openModal=function(id){document.getElementById(id).classList.remove("hidden");if(id==="featuredModal"){_featPreselectedPetId=_featPreselectedPetId||null;document.getElementById("feat-step1").style.display="";document.getElementById("feat-step2").style.display="none";document.getElementById("feat-step3").style.display="none";if(typeof _buildFeatPetUI==="function")_buildFeatPetUI();}if(id==="helpModal"){populateMapCorrectionDropdown();}};
 window.closeModal=function(id){document.getElementById(id).classList.add("hidden");};
