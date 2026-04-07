@@ -361,7 +361,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
 .feat-empty-sub{font-size:11px;color:var(--muted);line-height:1.5;}
 
 /* ── OVERLAYS ────────────────────────────────────────────────────────────── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;backdrop-filter:blur(4px);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;backdrop-filter:blur(4px);}
 .overlay.hidden{display:none!important;}
 .modal{background:var(--surface);border-radius:18px;width:100%;max-width:480px;max-height:92vh;overflow:hidden;overflow-y:auto;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);}
 .modal-top{padding:1.2rem 1.4rem 0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
@@ -638,7 +638,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
 
 <!-- ── TOPBAR ── -->
 <div class="topbar">
-  <a class="logo" href="#" onclick="if(typeof map!=='undefined'){map.setView([COMMUNITIES[currentCommunity].lat,COMMUNITIES[currentCommunity].lng],COMMUNITIES[currentCommunity].zoom,{animate:true});}document.getElementById('home-panel').classList.remove('expanded');return false;">
+  <a class="logo" href="#" onclick="if(typeof map!=='undefined'&&typeof COMMUNITIES!=='undefined'){var c=COMMUNITIES[currentCommunity];map.setView([c.lat,c.lng],c.zoom,{animate:true});}document.getElementById('home-panel').classList.remove('expanded');return false;">
     <div class="logo-icon"><img src="pause4paws_logo.png" style="width:30px;height:30px;border-radius:6px;object-fit:cover;" onerror="this.outerHTML='<span style=font-size:20px>🐾</span>'"></div>
     <div class="logo-words">
       <div class="logo-name">Pause4Paws</div>
@@ -1748,7 +1748,7 @@ function drawZones(){
   map.on("zoomend",()=>{const z=map.getZoom();zoneTooltips.forEach(tt=>{try{if(z>=14)tt.addTo(map);else map.removeLayer(tt);}catch(e){}});});
 }
 
-function zoneClick(commName,cl,lat,lng){
+function redrawZones(){if(!map)return;map.eachLayer(l=>{if(l instanceof L.Circle||l instanceof L.Tooltip)map.removeLayer(l);});zoneTooltips.length=0;drawZones();} function zoneClick(commName,cl,lat,lng){
   map.setView([lat,lng],17,{animate:true});
   const pets=allPets.filter(p=>p.community===commName&&p.cluster===cl);
   if(!pets.length)return;
@@ -1956,7 +1956,7 @@ window.dismissFeatBanner=function(){
 };
 
 function startListening(){
-  db.collection("pets").orderBy("createdAt","desc").onSnapshot(snap=>{allPets=snap.docs.map(d=>({id:d.id,...d.data()}));renderMarkers();updateAdminTables();});
+  db.collection("pets").orderBy("createdAt","desc").onSnapshot(snap=>{allPets=snap.docs.map(d=>({id:d.id,...d.data()}));renderMarkers();updateAdminTables();redrawZones();});
   db.collection("users").orderBy("createdAt","desc").onSnapshot(snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));updateAdminTables();});
   // Live listener for map corrections — updates admin badge in real time
   db.collection("mapCorrections").orderBy("reportedAt","desc").onSnapshot(snap=>{
