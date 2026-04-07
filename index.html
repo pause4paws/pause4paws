@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<html lang="en"><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -50,7 +50,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
 
 /* ── TOPBAR ─────────────────────────────────────────────────────────────── */
 .topbar{
-  position:absolute;top:0;left:0;right:0;z-index:300;height:62px;
+  position:absolute;top:0;left:0;right:0;z-index:9999;height:62px;
   background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border2);
   display:flex;align-items:center;padding:0 6px;gap:4px;overflow:visible;
@@ -627,8 +627,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito Sans',sans-serif;backg
     if(bj)bj.onclick=function(){window.dismissWelcome();window.openModal('authOverlay');window.switchTab('signup');};
     if(be)be.onclick=function(){window.dismissWelcome();};
     if(bh)bh.onclick=function(){window.dismissWelcome();window.openModal('helpModal');};
-    var cb=document.getElementById('comm-btn');
-    if(cb)cb.addEventListener('click',function(ev){ev.stopPropagation();var dd=document.getElementById('comm-dd');if(dd)dd.classList.toggle('open');if(typeof window.buildCommDD==='function')window.buildCommDD();});
+    /* comm-btn handled below */
     document.addEventListener('click',function(e){var cw=document.getElementById('comm-wrap');if(cw&&!cw.contains(e.target)){var dd=document.getElementById('comm-dd');if(dd)dd.classList.remove('open');}});
   });
 })();
