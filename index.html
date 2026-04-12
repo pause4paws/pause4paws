@@ -3259,6 +3259,220 @@ window.runAIFromStandalonePhoto = function(input){
   }, 2000);
 };
 
+// ══ FCM PUSH NOTIFICATIONS ════════════════════════════════════════════════
+const FCM_VAPID_KEY = "BIW9q7auzD_-fuSJ4-ibW43p7oCvD8P0J21vVQPA65AAKBsAME2bDDTQXtTS0_RbiV1i2Xr30N6VTx4vjBgjfEw";
+let fcmMessaging = null;
+
+function initFCM() {
+  try { fcmMessaging = firebase.messaging(); }
+  catch(e) { console.warn('[FCM] Not supported:', e.message); }
+}
+
+async function subscribeToPushNotifications() {
+  if (!fcmMessaging || !currentUser) return;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const token = await fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY });
+    if (!token) return;
+    await db.collection('users').doc(currentUser.uid).update({
+      fcmToken: token,
+      fcmTokenUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      fcmCommunity: currentCommunity
+    });
+    showToast('🔔 Push notifications enabled!');
+  } catch(err) { console.warn('[FCM] Subscribe error:', err.message); }
+}
+
+function listenForForegroundMessages() {
+  if (!fcmMessaging) return;
+  fcmMessaging.onMessage(payload => {
+    const { title, body, petId } = payload.data || payload.notification || {};
+    showFCMBanner(title || '🐾 New Alert', body || 'Activity in your community', petId);
+  });
+}
+
+function showFCMBanner(title, body, petId) {
+  const old = document.getElementById('fcm-banner');
+  if (old) old.remove();
+  const b = document.createElement('div');
+  b.id = 'fcm-banner';
+  b.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;background:white;border:1.5px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:12px 16px;max-width:calc(100vw - 24px);width:360px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;';
+  b.innerHTML = `
+    <div style="width:40px;height:40px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <img src="pause4paws_logo.png" style="width:28px;height:28px;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:18px>🐾</span>'">
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;color:var(--ink);margin-bottom:2px;">${title}</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.4;">${body}</div>
+    </div>
+    <button onclick="document.getElementById('fcm-banner').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);">×</button>`;
+  b.addEventListener('click', e => { if(e.target.tagName==='BUTTON') return; if(petId) openDetail(petId); b.remove(); });
+  document.body.appendChild(b);
+  setTimeout(() => { if(b.parentNode) b.remove(); }, 8000);
+}
+
+function maybePromptForNotifications() {
+  if (!currentUser || !window.currentUserPaid) return;
+  if (Notification.permission !== 'default') return;
+  if (localStorage.getItem('p4p_notif_prompted')) return;
+  if (!fcmMessaging) return;
+  localStorage.setItem('p4p_notif_prompted', '1');
+  const n = document.createElement('div');
+  n.id = 'notif-nudge';
+  n.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;max-width:420px;margin:0 auto;z-index:500;background:white;border:1.5px solid var(--brand-mid);border-radius:14px;box-shadow:0 8px 28px rgba(234,88,12,0.15);padding:14px 16px;display:flex;align-items:center;gap:12px;';
+  n.innerHTML = `
+    <div style="font-size:28px;flex-shrink:0;">🔔</div>
+    <div style="flex:1;">
+      <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;color:var(--ink);margin-bottom:3px;">Get instant pet alerts</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;">Enable notifications so you're alerted the moment a pet goes missing near you.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+      <button onclick="subscribeToPushNotifications();document.getElementById('notif-nudge').remove();"
+        style="padding:7px 14px;border-radius:8px;border:none;background:var(--brand);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">Enable 🔔</button>
+      <button onclick="document.getElementById('notif-nudge').remove();"
+        style="padding:5px 14px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Not now</button>
+    </div>`;
+  document.body.appendChild(n);
+  setTimeout(() => { if(n.parentNode) n.remove(); }, 15000);
+}
+
+// ══ TELEGRAM BOT ══════════════════════════════════════════════════════════════
+const TELEGRAM_BOT_TOKEN = "8663016273:AAELbuG-Ev0o5tJMW5iWIkeQ79HJxygkcaw";
+const TELEGRAM_CHAT_ID   = "@pause4paws_ae";
+
+async function sendTelegramAlert(pet) {
+  const caption = buildTelegramCaption(pet);
+  try {
+    if (pet.photoURL) {
+      const resp = await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`,
+        { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, photo: pet.photoURL, caption, parse_mode: 'HTML' }) }
+      );
+      const r = await resp.json();
+      if (!r.ok) {
+        console.warn('[Telegram] sendPhoto failed:', r.description);
+        await sendTelegramMessage(caption);
+      } else {
+        console.log('[Telegram] ✓ Photo posted');
+      }
+    } else {
+      await sendTelegramMessage(caption);
+    }
+  } catch(err) { console.warn('[Telegram] Error:', err.message); }
+}
+
+async function sendTelegramMessage(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' }) }
+    );
+  } catch(err) { console.warn('[Telegram] sendMessage error:', err.message); }
+}
+
+function buildTelegramCaption(pet) {
+  const EM = { Dog:'🐕', Cat:'🐈', Bird:'🐦', Rabbit:'🐇', 'Guinea Pig':'🐹', Other:'🐾' };
+  const e  = EM[pet.species] || '🐾';
+  const appUrl = 'https://pause4paws.github.io/pause4paws/';
+  const SL2 = { lost:'🔴 MISSING PET', found:'📍 SIGHTING LOGGED', home:'🏠 REUNITED!', stray:'🔵 KNOWN STRAY' };
+  const statusLabel = SL2[pet.status] || '🐾 PET ALERT';
+  const community = pet.community || 'Dubai';
+  const cluster   = pet.cluster ? ` · ${pet.cluster}` : '';
+  let cap = `<b>${statusLabel} — ${community}${cluster}</b>\n\n`;
+
+  if (pet.status === 'home') {
+    cap += `🎉 <b>${pet.name}</b> has been reunited with their family!\n`;
+    cap += `${e} ${pet.species||'Pet'}${pet.color?' · '+pet.color:''}\n`;
+    cap += `\nThank you to everyone who helped look 💛\n`;
+  } else if (pet.status === 'found') {
+    cap += `${e} <b>${pet.species||'Animal'}</b>${pet.breed?' · '+pet.breed:''}${pet.color?' · '+pet.color:''}\n`;
+    cap += `📍 Spotted near <b>${pet.cluster||community}</b>\n`;
+    if (pet.date) cap += `📅 ${pet.date}${pet.time?' at '+pet.time:''}\n`;
+    if (pet.desc) cap += `\n${pet.desc}\n`;
+    if (pet.contact) cap += `\n📞 Reporter: ${pet.contact}\n`;
+    cap += `\n👉 Does this match a missing pet? Check the map.`;
+  } else {
+    cap += `${e} <b>${pet.name}</b>${pet.breed?' · '+pet.breed:''}${pet.color?' · '+pet.color:''}${pet.size&&pet.size!=='Unknown'?' · '+pet.size:''}\n`;
+    cap += `📍 Last seen: <b>${pet.cluster||community}</b>\n`;
+    if (pet.date) cap += `📅 ${pet.date}${pet.time?' at '+pet.time:''}\n`;
+    if (pet.features) cap += `🔍 ${pet.features}\n`;
+    if (pet.desc) cap += `\n${pet.desc}\n`;
+    if (pet.microchip) cap += `\n💾 Microchip: <code>${pet.microchip}</code>\n`;
+    if (pet.contact) cap += `\n📞 <b>Contact owner: ${pet.contact}</b>\n`;
+    cap += `\n🔔 Please share and keep an eye out 🐾`;
+  }
+  cap += `\n\n🔗 <a href="${appUrl}">View on Pause4Paws map</a>`;
+  return cap;
+}
+
+async function sendTelegramDigest(community, type) {
+  const pets = allPets.filter(p => {
+    if (p.community !== community) return false;
+    if (type === 'featured') return p.featured && p.status === 'lost';
+    return p.status === 'lost' || p.status === 'found';
+  }).slice(0, 10);
+  if (!pets.length) { showToast('No pets to digest for ' + community); return; }
+
+  const h = new Date().getHours();
+  const timeLabel = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const typeLabel = type === 'featured' ? '⭐ Featured Pets' : '🐾 Daily Update';
+  const EM2 = { Dog:'🐕', Cat:'🐈', Bird:'🐦', Rabbit:'🐇', 'Guinea Pig':'🐹', Other:'🐾' };
+  const withPhotos = pets.filter(p => p.photoURL).slice(0, 10);
+
+  if (withPhotos.length >= 2) {
+    const headerCaption =
+      `<b>${typeLabel} — ${community}</b>\n${timeLabel}! Pets that still need your help:\n\n` +
+      withPhotos.map((p,i) => {
+        const e2 = EM2[p.species]||'🐾';
+        return `${i+1}. ${p.status==='found'?'📍':'🔴'} <b>${p.name}</b> ${e2} · ${p.cluster||p.community}${p.contact?' · 📞 '+p.contact:''}`;
+      }).join('\n') +
+      `\n\n🔗 <a href="https://pause4paws.github.io/pause4paws/">Full map →</a>`;
+
+    const media = withPhotos.map((p,i) => ({
+      type:'photo', media: p.photoURL,
+      caption:    i===0 ? headerCaption : undefined,
+      parse_mode: i===0 ? 'HTML'        : undefined
+    }));
+    try {
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMediaGroup`,
+        { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, media }) });
+      showToast(`✈️ Telegram digest sent — ${withPhotos.length} photos`);
+    } catch(err) { console.warn('[Telegram] Digest error:', err.message); }
+  } else {
+    const lines = pets.map((p,i) => {
+      const e3 = EM2[p.species]||'🐾';
+      return `${i+1}. <b>${p.name}</b> ${e3} · ${p.cluster||p.community}${p.contact?' · 📞 '+p.contact:''}${p.photoURL?'\n   📸 '+p.photoURL:''}`;
+    }).join('\n\n');
+    const msg = `<b>${typeLabel} — ${community}</b>\n${timeLabel}!\n\n${lines}\n\n🔗 <a href="https://pause4paws.github.io/pause4paws/">View full map →</a>`;
+    await sendTelegramMessage(msg);
+    showToast('✈️ Telegram digest sent');
+  }
+}
+
+function addTelegramDigestButtons() {
+  const container = document.getElementById('wa-broadcast-list');
+  if (!container || document.getElementById('tg-digest-panel')) return;
+  const communities = [...new Set(allPets.map(p => p.community).filter(Boolean))];
+  if (!communities.length) return;
+  const panel = document.createElement('div');
+  panel.id = 'tg-digest-panel';
+  panel.style.cssText = 'background:linear-gradient(135deg,#229ED9,#0088cc);color:white;border-radius:10px;padding:14px 16px;margin-bottom:12px;';
+  panel.innerHTML = `
+    <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;margin-bottom:6px;">✈️ Send Telegram Digest to @pause4paws_ae</div>
+    <div style="font-size:12px;opacity:.9;margin-bottom:10px;">Photos appear inline in the channel — no clicking required.</div>
+    <div style="font-size:11px;font-weight:800;opacity:.8;margin-bottom:5px;">All missing pets:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+      ${communities.map(c=>`<button onclick="sendTelegramDigest('${c}','missing')" style="padding:6px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.2);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;">🐾 ${c}</button>`).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:800;opacity:.8;margin-bottom:5px;">Featured only:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${communities.map(c=>`<button onclick="sendTelegramDigest('${c}','featured')" style="padding:6px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.15);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;">⭐ ${c}</button>`).join('')}
+    </div>`;
+  container.prepend(panel);
+}
 // ── WHATSAPP NOTIFICATION FUNCTIONS ──────────────────────────────────────────
 
 function getOptedInMembers(community){
