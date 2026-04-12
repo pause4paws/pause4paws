@@ -2089,7 +2089,7 @@ window.submitReport=async function(){
     pendingLatLng=null;closeModal("reportOverlay");map.setView([lat,lng],17,{animate:true});
     showToast("✅ Report submitted!");resetReportForm();
     // Send WhatsApp alert to all subscribers AND poster
-    setTimeout(()=>{sendInstantPetAlert({...data,id:ref2.id});},600);
+    setTimeout(()=>{sendInstantPetAlert({...data,id:ref2.id});},600); setTimeout(()=>sendTelegramAlert({...data,id:ref2.id}),700);
     // For lost pets: offer to feature after a short delay
     if(reportType==="lost"){
       setTimeout(()=>{
@@ -2233,7 +2233,7 @@ window.markHome=async function(petId){
     await db.collection("stats").doc("global").set({reunited:firebase.firestore.FieldValue.increment(1)},{merge:true});
     await db.collection("stats").doc(commKey).set({reunited:firebase.firestore.FieldValue.increment(1),community:pet?.community||currentCommunity},{merge:true});
     await loadReunionStats();closeModal("detailOverlay");showToast("🏠 Marked as Back Home! Reunited counter updated.");
-    if(pet){sendReunionWA(pet);}
+    if(pet) setTimeout(()=>sendTelegramAlert({...pet,status:'home'}),700);
   }catch(err){showToast("Error: "+err.message);}
 };
 window.delPet=async function(petId){if(!confirm("Delete this report permanently?"))return;try{await db.collection("pets").doc(petId).delete();closeModal("detailOverlay");showToast("Report deleted.");}catch(err){showToast("Error: "+err.message);}};
@@ -2595,7 +2595,7 @@ auth.onAuthStateChanged(async user=>{
     window.currentUserPaid=false;
   }
   // Always show trial badge if applicable
-  updateTrialBadge();
+  if(user && window.currentUserPaid) setTimeout(maybePromptForNotifications, 3000);
   // Re-render markers so locked/unlocked state is correct
   if(map) renderMarkers();
 });
@@ -3571,7 +3571,7 @@ window.sendDigestToComm=function(community,storageKey,today,btn){
 };
 
 document.addEventListener("DOMContentLoaded",()=>{
-  initMap();populateSelects();buildCommDD();startListening();
+  initFCM(); listenForForegroundMessages();
   // Wire welcome buttons
   const _e=document.getElementById("btn-explore-map");
   const _j=document.getElementById("btn-join-now");
