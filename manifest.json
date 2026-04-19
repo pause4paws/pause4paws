@@ -1,0 +1,56 @@
+{
+  "name": "Pause4Paws Dubai",
+  "short_name": "Pause4Paws",
+  "description": "Dubai community pet map — report missing pets, log sightings, reunite animals",
+  "start_url": "/pause4paws/",
+  "scope": "/pause4paws/",
+  "display": "standalone",
+  "background_color": "#FFFBF8",
+  "theme_color": "#EA580C",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["lifestyle", "social", "utilities"],
+  "screenshots": [],
+  "icons": [
+    {
+      "src": "pause4paws_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pause4paws_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "pause4paws_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pause4paws_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Report Missing Pet",
+      "short_name": "Report",
+      "description": "Report a missing pet immediately",
+      "url": "/pause4paws/?action=report",
+      "icons": [{ "src": "pause4paws_logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Log a Sighting",
+      "short_name": "Sighting",
+      "description": "Log a pet sighting on the map",
+      "url": "/pause4paws/?action=sighting",
+      "icons": [{ "src": "pause4paws_logo.png", "sizes": "96x96" }]
+    }
+  ]
+}
