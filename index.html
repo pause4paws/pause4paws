@@ -1996,12 +1996,12 @@ const COMMUNITIES={
       [24.99736,55.39769,"Juniper"],[24.99386,55.39812,"Primrose"],[24.99173,55.37239,"Sanctnary"],
       [24.98783,55.39846,"Aster"],[24.98612,55.39631,"Coursetia"],[24.98836,55.39237,"Hawthorn"],
       [24.98988,55.39400,"Mulberry"],[24.98461,55.38789,"Verona"],
-      [24.9580,55.3650,"Elo"],[24.9648,55.3635,"Elo 2"],[24.9665,55.3605,"Elo 3"],
-      [24.9400,55.3510,"Natura"],[24.9385,55.3480,"Aurum"],[24.9370,55.3450,"Violet"],
-      [24.9360,55.3520,"Malta"],[24.9380,55.3380,"Trump PRVT"],[24.9590,55.3390,"Viridis Residences"],
-      [24.9510,55.3490,"The Park"],[24.9425,55.3430,"Danah Bay"],[24.9445,55.3545,"Rivina"],
+      [24.9580,55.3650,"Elo"],[24.9648,55.3635,"Elo 2"],[24.983529,55.392499,"Elo 3"],
+      [24.983345,55.392167,"Elo Towers"],[24.9400,55.3510,"Natura"],[24.9385,55.3480,"Aurum"],[24.9370,55.3450,"Violet"],
+      [24.9360,55.3520,"Malta"],[24.9380,55.3380,"Trump PRVT"],[24.984245,55.393138,"Viridis Towers"],
+      [24.982995,55.391032,"Navitas D2"],[24.9510,55.3490,"The Park"],[24.9425,55.3430,"Danah Bay"],[24.9445,55.3545,"Rivina"],
       [24.9465,55.3475,"Oleander"],[24.9600,55.3440,"Camelia"],[24.9420,55.3490,"Acuna"],
-      [24.9440,55.3550,"Amazonia"],[24.9450,55.3480,"Odora"],
+      [24.995610,55.375746,"Amazonia"],[24.991508,55.395665,"Odora"],
     ]},
   "Damac Hills":{lat:25.0340,lng:55.2670,zoom:15,color:"#C2410C",
     clusterCoords:[[25.0370,55.2700,"Aknan Villas"],[25.0350,55.2680,"Brookfield"],[25.0330,55.2700,"Claret"],[25.0360,55.2650,"Golf Vita"],[25.0315,55.2720,"Jasmine"],[25.0340,55.2640,"Loreto"],[25.0380,55.2660,"Organica"],[25.0305,55.2700,"Primrose"],[25.0390,55.2700,"Silver Springs"],[25.0325,55.2650,"Trump Estates"],[25.0360,55.2730,"Water Side"],[25.0295,55.2680,"The Legends"]]},
@@ -5562,12 +5562,16 @@ window.toggleVetLayer = function() {
 // ══════════════════════════════════════════════════════════════════════════════
 function checkDigestTime() {
   const now = new Date();
-  const h = now.getHours(), m = now.getMinutes();
+  // Always use GST (Gulf Standard Time = UTC+4) regardless of device timezone
+  const gstOffset = 4 * 60; // minutes
+  const gstMs = now.getTime() + (gstOffset + now.getTimezoneOffset()) * 60000;
+  const gstNow = new Date(gstMs);
+  const h = gstNow.getHours(), m = gstNow.getMinutes();
   const isDigestTime = (h === 6 || h === 18) && m < 5;
   if(!isDigestTime) return;
 
   // Don't show more than once per window
-  const key = `p4p_digest_shown_${h}_${now.toDateString()}`;
+  const key = `p4p_digest_shown_${h}_${gstNow.toDateString()}`;
   if(localStorage.getItem(key)) return;
   localStorage.setItem(key, '1');
 
