@@ -943,7 +943,7 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
   window.toggleFaq=function(item){if(item&&item.classList)item.classList.toggle('open');};
   window.toggleSidebar=function(){var s=document.getElementById('sidebar'),b=document.getElementById('sidebar-backdrop'),t=document.getElementById('sb-toggle');if(!s)return;var o=s.classList.toggle('open');if(b)b.classList.toggle('show',o);if(t)t.textContent=o?'✕':'☰';};
   window.toggleSearchPanel=function(){var p=document.getElementById('search-panel'),b=document.getElementById('narrow-btn');if(p){var o=p.classList.toggle('open');if(b)b.style.display=o?'none':'flex';}};
-  window.setFilter=function(f,el){document.querySelectorAll('.fpill').forEach(function(p){p.classList.toggle('active',p.dataset.f===f);});};
+  window.setFilter=function(f,el){currentFilter=f;document.querySelectorAll('.fpill').forEach(function(p){p.classList.toggle('active',p.dataset.f===f);});if(typeof renderMarkers==='function')renderMarkers();};
   window.onGlobalSearch=function(v){if(typeof activeFilters!=='undefined'){activeFilters.q=v||undefined;}var sx=document.getElementById('search-x');if(sx)sx.style.display=v?'':'none';};
   window.clearGlobalSearch=function(){var gs=document.getElementById('global-search');if(gs)gs.value='';window.onGlobalSearch('');};
   document.addEventListener('DOMContentLoaded',function(){
@@ -1100,11 +1100,12 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
     <div><div class="sb-title">Active Reports</div><div style="font-size:11px;color:var(--muted);margin-top:1px;" id="sb-count">Tap to filter</div></div>
     <button onclick="toggleSidebar()" style="width:30px;height:30px;border-radius:7px;border:none;background:#111;color:white;font-weight:900;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">×</button>
   </div>
-  <div style="display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
-    <button class="sb-filter-btn active" data-f="all" onclick="setSidebarFilter('all',this)" style="flex:1;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:var(--brand);color:white;font-size:10px;font-weight:800;cursor:pointer;">All</button>
-    <button class="sb-filter-btn" data-f="lost" onclick="setSidebarFilter('lost',this)" style="flex:1;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--lost);font-size:10px;font-weight:800;cursor:pointer;">🔴 Lost</button>
-    <button class="sb-filter-btn" data-f="found" onclick="setSidebarFilter('found',this)" style="flex:1;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--found);font-size:10px;font-weight:800;cursor:pointer;">🟢 Found</button>
-    <button class="sb-filter-btn" data-f="stray" onclick="setSidebarFilter('stray',this)" style="flex:1;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--stray);font-size:10px;font-weight:800;cursor:pointer;">🔵 Stray</button>
+  <div style="display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;" class="sb-filter-row">
+    <button class="sb-filter-btn active" data-f="all" onclick="setSidebarFilter('all',this)" style="flex:1;min-width:32px;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:var(--brand);color:white;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;">All</button>
+    <button class="sb-filter-btn" data-f="lost" onclick="setSidebarFilter('lost',this)" style="flex:1;min-width:36px;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--lost);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;">🔴 Lost</button>
+    <button class="sb-filter-btn" data-f="found" onclick="setSidebarFilter('found',this)" style="flex:1;min-width:40px;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--found);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;">🟢 Found</button>
+    <button class="sb-filter-btn" data-f="stray" onclick="setSidebarFilter('stray',this)" style="flex:1;min-width:36px;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:var(--stray);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;">🔵 Stray</button>
+    <button class="sb-filter-btn" data-f="mine" id="sb-mine-btn" onclick="setSidebarFilter('mine',this)" style="flex:1;min-width:36px;padding:5px 4px;border-radius:7px;border:1.5px solid var(--border2);background:white;color:#7C3AED;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;display:none;">🐾 Mine</button>
   </div>
   <div class="sb-body" id="sb-body"></div>
 </div>
@@ -1180,10 +1181,11 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
   <div class="welcome-card">
     <div class="welcome-hero">
       <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:.4rem;">
-        <img src="pause4paws_logo.png" onerror="this.style.display='none'" style="width:44px;height:44px;border-radius:10px;">
+        <img src="pause4paws_logo.png" onerror="this.style.display='none'" style="width:44px;height:44px;border-radius:10px;" alt="Pause4Paws">
         <div class="welcome-title" style="margin-bottom:0;">Pause4Paws</div>
       </div>
       <div class="welcome-tagline">The Dubai community map for missing pets &amp; sightings.</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;font-weight:700;letter-spacing:.03em;">🏠 DAMAC Hills 2 · Town Square · Arabian Ranches · Serena · Villanova + more</div>
     </div>
     <div class="welcome-body">
       <div class="how-steps">
@@ -1194,8 +1196,9 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
       <div class="welcome-btns">
         <button id="btn-join-now" class="welcome-main-btn" style="background:linear-gradient(135deg,var(--brand),#F97316);">🐾 Join now — 38 AED · one payment for life</button>
         <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.75);margin-top:-2px;margin-bottom:6px;">That's only £8 · €9 · $10 — never pay again</div>
-        <button id="btn-explore-map" class="welcome-main-btn">Explore the map →</button>
+        <button id="btn-explore-map" class="welcome-main-btn" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);">👀 Browse the map first →</button>
         <button id="btn-help-faq" class="welcome-sec-btn">Help &amp; FAQ</button>
+        <button class="welcome-sec-btn" onclick="window.open('https://wa.me/?text='+encodeURIComponent('🐾 Pause4Paws — Dubai community pet tracker! Missing pets, sightings, AI matching. Join for 38 AED lifetime: https://pause4paws.github.io/pause4paws/'),'_blank')" style="background:rgba(37,211,102,.15);color:#25D366;border-color:rgba(37,211,102,.4);">💬 Share with neighbours on WhatsApp</button>
       </div>
     </div>
   </div>
@@ -1421,6 +1424,9 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
     <div class="modal-inner">
       <div class="auth-tabs"><div class="auth-tab active" id="t-signin" onclick="switchTab('signin')">Sign in</div><div class="auth-tab" id="t-signup" onclick="switchTab('signup')">Create account</div></div>
       <div id="signin-block">
+        <!-- Google Sign-In -->
+        <button onclick="doGoogleSignIn()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border-radius:10px;border:1.5px solid var(--border2);background:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#333;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.8 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.4-.1-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.4-17.7 11.7z"/><path fill="#FBBC05" d="M24 45c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.6 36.1 27 37 24 37c-5.8 0-10.7-3.1-11.8-8.5l-7 5.4C8 40.7 15.4 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.6 2.5-2.1 4.7-4.1 6.1l6.6 5.4C42 36.7 45 31 45 24c0-1.4-.2-2.7-.5-4z"/></svg>Continue with Google</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div style="flex:1;height:1px;background:var(--border2);"></div><span style="font-size:11px;color:var(--muted);font-weight:700;">or sign in with email</span><div style="flex:1;height:1px;background:var(--border2);"></div></div>
         <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="si-email" placeholder="you@example.com"></div>
         <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="si-pw" placeholder="••••••••"></div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -1439,7 +1445,7 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
         <div class="frow"><div class="fg"><label class="fl">First name *</label><input class="fi" type="text" id="su-fn" placeholder="Sara"></div><div class="fg"><label class="fl">Last name</label><input class="fi" type="text" id="su-ln" placeholder="Al Rashed"></div></div>
         <div class="fg"><label class="fl">Email *</label><input class="fi" type="email" id="su-email" placeholder="you@example.com"></div>
         <div class="fg"><label class="fl">Phone number * <span style="font-weight:400;color:var(--muted);">(for Telegram alerts)</span></label><input class="fi" type="tel" id="su-phone" placeholder="+971 50 000 0000"><div style="font-size:10px;color:var(--muted);margin-top:3px;">⚠️ Must include country code, e.g. +971 50 000 0000</div></div>
-        <div class="fg"><label class="fl">Your community</label><select class="fs" id="su-comm"><option value="">Select your area</option></select></div>
+        <div class="fg"><label class="fl">Your community</label><select class="fs" id="su-comm" style="font-size:13px;"><option value="">Select your area</option></select></div>
         <div class="fg"><label class="fl">Password * (min. 8 characters)</label><input class="fi" type="password" id="su-pw" placeholder="••••••••"></div>
         <!-- WhatsApp alerts consent -->
         <div style="background:#ECFDF5;border:1px solid #6EE7B7;border-radius:9px;padding:11px 13px;margin-bottom:.85rem;display:flex;align-items:flex-start;gap:10px;">
@@ -1451,6 +1457,8 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
         <hr class="hdivider">
         <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">💳 After sign-up you'll be shown a <strong>Wio QR code</strong> to pay 38 AED via your banking app. Your account activates once payment is confirmed.</p>
         <button class="sub-btn" onclick="doSignUp()">Create account →</button>
+        <div style="display:flex;align-items:center;gap:8px;margin:.7rem 0;"><div style="flex:1;height:1px;background:var(--border2);"></div><span style="font-size:11px;color:var(--muted);font-weight:700;">or</span><div style="flex:1;height:1px;background:var(--border2);"></div></div>
+        <button onclick="doGoogleSignIn()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;border-radius:10px;border:1.5px solid var(--border2);background:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#333;"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.8 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.4-.1-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.4-17.7 11.7z"/><path fill="#FBBC05" d="M24 45c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.6 36.1 27 37 24 37c-5.8 0-10.7-3.1-11.8-8.5l-7 5.4C8 40.7 15.4 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.6 2.5-2.1 4.7-4.1 6.1l6.6 5.4C42 36.7 45 31 45 24c0-1.4-.2-2.7-.5-4z"/></svg>Sign up with Google instead</button>
         <p style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;text-align:center;">By signing up you agree that all payments are non-refundable. Lifetime membership is for one person and non-transferable.</p>
       </div>
     </div>
@@ -1476,7 +1484,13 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
       </div>
       <div class="frow"><div class="fg"><label class="fl">Breed</label><div class="fi-wrap"><input class="fi" type="text" id="r-breed" placeholder="e.g. Labrador" autocomplete="off" oninput="breedAutocomplete(this)" onblur="setTimeout(()=>hideBreedSuggestions(),200)"><div class="breed-suggestions" id="breed-suggestions" style="display:none;"></div></div></div><div class="fg"><label class="fl">Colour <span style="color:var(--lost);font-size:11px;">*</span></label><input class="fi" type="text" id="r-color" placeholder="e.g. golden brown, black &amp; white, orange tabby…" required><div style="font-size:10px;color:var(--muted);margin-top:3px;">⚠️ Required — the most important field for AI matching</div></div></div>
       <div class="fg"><label class="fl">Distinctive features <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(the more detail, the better the match)</span></label><input class="fi" type="text" id="r-features" placeholder="e.g. blue collar, scar above right eye, missing front tooth, white patch on chest, limps on left leg…"></div>
-      <div class="fg"><label class="fl">Microchip number <span style="font-weight:400;color:var(--muted);">(if known)</span></label><input class="fi" type="text" id="r-microchip" placeholder="e.g. 982000123456789"></div>
+      <div class="fg"><label class="fl">Microchip number <span style="font-weight:400;color:var(--muted);">(if known)</span></label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input class="fi" type="text" id="r-microchip" placeholder="e.g. 982000123456789" style="flex:1;" oninput="toggleChipLookup(this.value)">
+          <button id="chip-lookup-btn" onclick="openChipLookup()" style="display:none;padding:7px 10px;border-radius:8px;border:none;background:var(--brand);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">🔍 Look up</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">UAE residents: enter the 15-digit chip number from the vet certificate</div>
+      </div>
       <div class="frow"><div class="fg"><label class="fl">Date last seen</label><input class="fi" type="date" id="r-date"></div><div class="fg"><label class="fl">Approx time</label><input class="fi" type="time" id="r-time"></div></div>
       <div class="fg"><label class="fl">Description</label><textarea class="ft" id="r-desc" placeholder="Behaviour, temperament, exactly where last seen…"></textarea></div>
       <div class="fg"><label class="fl">Your contact number</label><input class="fi" type="tel" id="r-contact" placeholder="+971 50 000 0000"><div style="font-size:10px;color:var(--muted);margin-top:3px;">⚠️ Must include country code, e.g. +971 50 000 0000</div></div>
@@ -1505,7 +1519,7 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
   <div class="modal">
     <div class="modal-top"><div><h2 class="modal-title">Log a Sighting</h2><p class="modal-sub" id="sl-loc-text">Location pinned on map</p></div><button class="modal-x" onclick="closeModal('sightingLogOverlay')">×</button></div>
     <div class="modal-inner">
-      <div class="fg"><label class="fl">Which pet did you see?</label><select class="fs" id="sl-pet"><option value="">Unknown / general sighting</option></select></div>
+      <div class="fg"><label class="fl">Which pet did you see?</label><select class="fs" id="sl-pet" onchange="const n=document.getElementById('sl-owner-note');if(n)n.style.display=this.value?'':' none'"><option value="">Unknown / general sighting</option></select><div id="sl-owner-note" style="display:none;font-size:11px;color:#065F46;background:#ECFDF5;border-radius:7px;padding:7px 10px;margin-top:5px;font-weight:700;">🔔 The owner will be notified instantly when you submit</div></div>
       <div class="frow"><div class="fg"><label class="fl">Species</label><select class="fs" id="sl-species"><option>Dog</option><option>Cat</option><option>Bird</option><option>Rabbit</option><option>Other</option></select></div><div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="sl-date"></div></div>
       <div class="fg"><label class="fl">Time spotted</label><input class="fi" type="time" id="sl-time"></div>
       <div class="fg"><label class="fl">What did you see?</label><textarea class="ft" id="sl-desc" placeholder="Colour, size, direction heading, behaviour…"></textarea></div>
@@ -1775,7 +1789,7 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
         <div style="font-size:12px;color:var(--brand-dark);font-weight:800;">38 AED — lifetime membership</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px;">Scan with Wio, ENBD, FAB, ADCB or any UAE banking app</div>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already paid? Your account will be activated shortly. If it's been more than a few hours, <a href="https://t.me/pause4paws_ae" style="color:var(--brand);font-weight:700;">message us on Telegram</a>.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already paid? Your account will be activated shortly. If it's been more than a few hours, <a href="https://t.me/pause4paws_ae" style="color:var(--brand);font-weight:700;">message us on Telegram</a> or join <a href="https://t.me/pause4paws_ae" style="color:var(--brand-dark);">our Telegram channel</a>.</div>
       <button class="sub-btn" onclick="document.getElementById('payment-reminder-overlay').classList.add('hidden');openModal('wioQrModal');">💳 Pay now — 38 AED lifetime</button>
       <button style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;" onclick="document.getElementById('payment-reminder-overlay').classList.add('hidden')">Maybe later</button>
     </div>
@@ -1837,7 +1851,7 @@ html[dir="rtl"] .comment-body{border-radius:10px 0 10px 10px;}
         4. Tap "I've paid" below — the admin is notified instantly to activate your account
       </div>
       <button class="qr-done-btn" onclick="onMembershipPaymentDone()">✅ I've paid — notify admin</button>
-      <div class="qr-fine">Payment is non-refundable. Your account will be activated once payment is confirmed — usually within a few hours. If you have trouble, <a href="https://t.me/pause4paws_ae" style="color:var(--brand-dark);">message us on Telegram</a>.</div>
+      <div class="qr-fine">Payment is non-refundable. Your account will be activated once payment is confirmed — usually within a few hours. If you have trouble, <a href="https://t.me/pause4paws_ae" style="color:var(--brand-dark);">message us on Telegram</a> or join <a href="https://t.me/pause4paws_ae" style="color:var(--brand-dark);">our Telegram channel</a>.</div>
     </div>
   </div>
 </div>
@@ -1993,7 +2007,7 @@ const COMMUNITIES={
       [24.99150,55.37903,"Vardon"],[24.99293,55.38716,"Aquilegia"],[24.99582,55.37163,"Pacifica"],
       [24.99750,55.37528,"Centaury"],[24.99730,55.37989,"Janusia"],[24.99492,55.37942,"Trixis"],
       [24.99600,55.38624,"Sycamore"],[24.99745,55.39249,"Claret"],[24.99428,55.39143,"Zinnia"],
-      [24.99736,55.39769,"Juniper"],[24.99386,55.39812,"Primrose"],[24.99173,55.37239,"Sanctnary"],
+      [24.99736,55.39769,"Juniper"],[24.99386,55.39812,"Primrose"],[24.99173,55.37239,"Sanctuary"],
       [24.98783,55.39846,"Aster"],[24.98612,55.39631,"Coursetia"],[24.98836,55.39237,"Hawthorn"],
       [24.98988,55.39400,"Mulberry"],[24.98461,55.38789,"Verona"],
       [24.9580,55.3650,"Elo"],[24.9648,55.3635,"Elo 2"],[24.983529,55.392499,"Elo 3"],
@@ -2287,23 +2301,32 @@ function popupHTML(pet){
     ?`<img src="${pet.photoURL}" style="width:100%;height:160px;object-fit:cover;border-radius:10px 10px 0 0;display:block;" onerror="this.style.display='none'">`
     :`<div style="width:100%;height:100px;background:#FFF7ED;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:52px;">${e}</div>`;
 
-  // Locked popup for non-members — shows pin exists but blurs details
+  // Locked popup for non-members — shows blurred photo + full emotional CTA
   if(!window.currentUserPaid){
+    const isDemoPin = pet._demo === true;
+    // Photo visible but blurred to tease the content
+    const blurPhoto = pet.photoURL
+      ? `<div style="position:relative;overflow:hidden;border-radius:10px 10px 0 0;height:160px;">
+           <img src="${pet.photoURL}" style="width:100%;height:160px;object-fit:cover;filter:blur(6px);transform:scale(1.06);display:block;" onerror="this.style.display='none'">
+           <div style="position:absolute;inset:0;background:rgba(0,0,0,0.42);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+             <div style="font-size:24px;margin-bottom:4px;">🔒</div>
+             <div style="font-size:12px;font-weight:900;color:white;">Members only</div>
+             ${isDemoPin ? '<div style="font-size:9px;color:rgba(255,255,255,.7);margin-top:2px;">📍 Real report · blurred for preview</div>' : ''}
+           </div>
+         </div>`
+      : `<div style="width:100%;height:90px;background:#FFF7ED;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:44px;">${e}</div>`;
     return `<div class="pet-popup" style="margin:0;border-radius:10px;overflow:hidden;">
-      <div style="position:relative;">
-        ${photo}
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;border-radius:10px 10px 0 0;">
-          <div style="text-align:center;color:white;padding:10px;">
-            <div style="font-size:28px;margin-bottom:4px;">🔒</div>
-            <div style="font-size:12px;font-weight:900;">Members only</div>
-            <div style="font-size:10px;opacity:.8;margin-top:2px;">Join to see full details</div>
-          </div>
-        </div>
-      </div>
+      ${blurPhoto}
       <div style="padding:10px 12px;">
-        <div style="font-size:13px;font-weight:900;color:var(--ink);margin-bottom:2px;">${sl} · ${pet.cluster||pet.community}</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${pet.species||"Pet"} · ${pet.date||"Recent"}</div>
-        <button onclick="openPaymentReminder()" style="width:100%;padding:9px;border:none;border-radius:8px;font-size:12px;font-weight:900;color:white;background:var(--brand);cursor:pointer;font-family:'Nunito',sans-serif;">🔓 Join to view details</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="background:${c}20;color:${c};font-size:11px;font-weight:900;padding:2px 8px;border-radius:50px;">${sl}</span>
+          <span style="font-size:11px;color:var(--muted);">${pet.species||"Pet"} · ${pet.cluster||pet.community}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${pet.date||"Recent"} · Full details hidden</div>
+        <button onclick="openPaymentReminder()" style="width:100%;padding:10px;border:none;border-radius:9px;font-size:13px;font-weight:900;color:white;background:linear-gradient(135deg,var(--brand),#F97316);cursor:pointer;font-family:'Nunito',sans-serif;line-height:1.4;">
+          🔓 Join for 38 AED — less than a coffee, forever
+        </button>
+        <div style="text-align:center;font-size:10px;color:var(--muted);margin-top:5px;">One payment · Lifetime access · No renewals</div>
       </div>
     </div>`;
   }
@@ -2345,7 +2368,7 @@ function filteredPets(){
 }
 
 function updateStats(){
-  const b=allPets.filter(p=>p.community===currentCommunity);
+  const b=allPets.filter(p=>p.community===currentCommunity && !p._demo);
   ["lost","found","home","stray"].forEach(s=>{const el=document.getElementById("s-"+s);if(el)el.textContent=b.filter(p=>p.status===s).length;});
 }
 
@@ -2360,7 +2383,13 @@ window.setSidebarFilter=function(f,el){
   renderSidebar(filteredPets());
 };
 function renderSidebar(pets){
-  const filtered=sidebarFilter==="all"?pets:pets.filter(p=>p.status===sidebarFilter);
+  // 'mine' filter: show only the current user's own reports
+  let filtered;
+  if(sidebarFilter==="mine"){
+    filtered = currentUser ? allPets.filter(p=>p.reporterUid===currentUser.uid && !p._demo) : [];
+  } else {
+    filtered = sidebarFilter==="all" ? pets.filter(p=>!p._demo) : pets.filter(p=>p.status===sidebarFilter&&!p._demo);
+  }
   document.getElementById("sb-count").textContent=`${filtered.length} report${filtered.length!==1?"s":""}`;
   if(!filtered.length){
     document.getElementById("sb-body").innerHTML=`<div style="padding:2rem;text-align:center;color:var(--muted);font-size:13px;">No reports in ${currentCommunity}</div>`;
@@ -2445,11 +2474,64 @@ window.dismissFeatBanner=function(){
   sessionStorage.setItem("p4p_feat_banner_dismissed","1");
 };
 
+
+// ── DEMO PINS (show to non-members so map looks alive) ──────────────────────
+// 3 synthetic pets injected into allPets for visual proof-of-concept.
+// They have fake IDs, no Firestore doc, and are filtered out for paid members.
+const DEMO_PETS = [
+  { id:"__demo1", _demo:true,
+    name:"Demo Pet", status:"lost", species:"Dog", breed:"Labrador",
+    color:"Golden brown", size:"Large", sex:"Male",
+    community:"Damac Hills 2", cluster:"Victoria",
+    lat:24.98078, lng:55.38333,
+    date: new Date(Date.now()-2*86400000).toISOString().split("T")[0],
+    photoURL:"https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80",
+    contact:"", features:"Blue collar", desc:"", sightings:[], featured:false,
+    reporterUid:"__demo" },
+  { id:"__demo2", _demo:true,
+    name:"Demo Sighting", status:"found", species:"Cat", breed:"Tabby",
+    color:"Orange striped", size:"Small", sex:"Unknown",
+    community:"Damac Hills 2", cluster:"Basswood",
+    lat:24.97950, lng:55.38023,
+    date: new Date(Date.now()-86400000).toISOString().split("T")[0],
+    photoURL:"https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80",
+    contact:"", features:"", desc:"", sightings:[], featured:false,
+    reporterUid:"__demo" },
+  { id:"__demo3", _demo:true,
+    name:"Demo Pet", status:"stray", species:"Cat", breed:"Unknown",
+    color:"Black & white", size:"Medium", sex:"Unknown",
+    community:"Damac Hills 2", cluster:"Mimosa",
+    lat:24.97862, lng:55.38424,
+    date: new Date(Date.now()-3*86400000).toISOString().split("T")[0],
+    photoURL:"https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=400&q=80",
+    contact:"", features:"No collar", desc:"", sightings:[], featured:false,
+    reporterUid:"__demo" }
+];
+
+function injectDemoPets() {
+  // Only inject for non-members. Remove any existing demo pets first.
+  allPets = allPets.filter(p => !p._demo);
+  if (!window.currentUserPaid) {
+    // Adapt demo pets to current community
+    const demoCopy = DEMO_PETS.map(p => ({...p, community: currentCommunity}));
+    // Use the community's real cluster coords
+    const comm = COMMUNITIES[currentCommunity];
+    if (comm && comm.clusterCoords && comm.clusterCoords.length >= 3) {
+      demoCopy[0].lat = comm.clusterCoords[0][0]; demoCopy[0].lng = comm.clusterCoords[0][1]; demoCopy[0].cluster = comm.clusterCoords[0][2];
+      demoCopy[1].lat = comm.clusterCoords[1][0]; demoCopy[1].lng = comm.clusterCoords[1][1]; demoCopy[1].cluster = comm.clusterCoords[1][2];
+      demoCopy[2].lat = comm.clusterCoords[2][0]; demoCopy[2].lng = comm.clusterCoords[2][1]; demoCopy[2].cluster = comm.clusterCoords[2][2];
+    }
+    allPets = [...demoCopy, ...allPets];
+  }
+  renderMarkers();
+}
+
 function startListening(){
   const adminOpen = () => document.getElementById("admin-panel").classList.contains("open");
 
   db.collection("pets").orderBy("createdAt","desc").onSnapshot(snap=>{
     allPets=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!window.currentUserPaid && typeof injectDemoPets === "function") { injectDemoPets(); return; }
     renderMarkers();
     redrawZones();
     if(adminOpen()) updateAdminTables();
@@ -2590,17 +2672,21 @@ window.submitReport=async function(){
     }
     pendingLatLng=null;closeModal("reportOverlay");map.setView([lat,lng],17,{animate:true});
     showToast("✅ Report submitted!");resetReportForm();
-    // Send Telegram alert (primary) + FCM push + in-app notifications
-    setTimeout(()=>sendTelegramAlert({...data,id:ref2.id}),500);
-    setTimeout(()=>sendFCMPushToSubscribers({...data,id:ref2.id}),900);
-    // Read the saved doc to get final photoURL (may have been uploaded after initial save)
+    // Send Telegram AFTER reading saved doc so photoURL is final
     setTimeout(async ()=>{
-      try{
-        const saved=await db.collection('pets').doc(ref2.id).get();
-        const finalData=saved.exists()?{...data,...saved.data()}:{...data};
-        await notifyNewReport(finalData,ref2.id);
-      }catch(e){ notifyNewReport({...data},ref2.id); }
-    },1500);
+      try {
+        const saved = await db.collection('pets').doc(ref2.id).get();
+        const finalData = saved.exists() ? {...data, ...saved.data(), id:ref2.id} : {...data, id:ref2.id};
+        await sendTelegramAlert(finalData);
+        setTimeout(()=>sendFCMPushToSubscribers(finalData), 400);
+        setTimeout(()=>notifyNewReport(finalData, ref2.id), 700);
+      } catch(e) {
+        console.warn('[Post-save] Error:', e.message);
+        sendTelegramAlert({...data, id:ref2.id});
+        setTimeout(()=>sendFCMPushToSubscribers({...data,id:ref2.id}),400);
+        notifyNewReport({...data},ref2.id);
+      }
+    }, 1200);
     // For lost pets: offer to feature after a short delay
     if(reportType==="lost"){
       setTimeout(()=>{
@@ -2681,6 +2767,8 @@ window.submitSighting=async function(){
         const sightings=[...(ps.data().sightings||[]),{lat:loc.lat,lng:loc.lng,time:`${date} ${time}`,desc,reporter:currentUser.displayName||currentUser.email,photoURL:sightingPhotoURL}];
         await db.collection("pets").doc(petId).update({sightings});
         showToast(`📍 Sighting logged for ${ps.data().name}`);
+        // Notify the pet owner about the sighting
+        notifyPetOwnerOfSighting(ps.data(), petId, loc, desc, currentUser);
       }
     }else{
       const ref=await db.collection("pets").add({name:"Sighting",species:document.getElementById("sl-species").value,status:"found",community:currentCommunity,date,time,desc,lat:loc.lat,lng:loc.lng,reporterUid:currentUser.uid,reporterName:currentUser.displayName||currentUser.email,createdAt:firebase.firestore.FieldValue.serverTimestamp(),sightings:[],photoURL:sightingPhotoURL,breed:"Unknown",color:"Unknown",sex:"Unknown",size:"Unknown",features:"",contact:"",cluster:"",featured:false});
@@ -2764,7 +2852,7 @@ window.openDetail=function(petId){
         <div class="dg-item"><div class="dg-lbl">Date</div><div class="dg-val">${pet.date||"—"}${pet.time?" · "+pet.time:""}</div></div>
         <div class="dg-item"><div class="dg-lbl">Sex</div><div class="dg-val">${pet.sex||"—"}</div></div>
         <div class="dg-item"><div class="dg-lbl">Size</div><div class="dg-val">${pet.size||"—"}</div></div>
-        ${pet.microchip?`<div class="dg-item" style="grid-column:1/-1;"><div class="dg-lbl">🔬 Microchip</div><div class="dg-val" style="font-family:monospace;font-size:11px;">${pet.microchip}</div></div>`:""}
+        ${pet.microchip?`<div class="dg-item" style="grid-column:1/-1;"><div class="dg-lbl">🔬 Microchip</div><div class="dg-val" style="font-family:monospace;font-size:11px;">${pet.microchip} <button onclick="window.open('https://www.petmaxx.com/pet-lookup?microchipnumber=${pet.microchip}','_blank')" style="margin-left:6px;padding:2px 8px;border-radius:6px;border:none;background:var(--brand);color:white;font-size:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Look up</button></div></div>`:""}
       </div>
       ${pet.features?`<div class="det-sec"><div class="det-sec-title">Distinguishing Features</div><p>${pet.features}</p></div>`:""}
       ${pet.desc?`<div class="det-sec"><div class="det-sec-title">Description</div><p>${pet.desc}</p></div>`:""}
@@ -2772,9 +2860,10 @@ window.openDetail=function(petId){
 
       <div class="det-actions">
         ${pet.contact?`<a href="tel:${pet.contact}" class="act-btn act-call">📞 Call Owner</a>`:""}
-        ${currentUser&&pet.reporterUid!==currentUser.uid?`<button class="act-btn" style="background:#0EA5E9;color:white;" onclick="openDMWithOwner('${pet.id}')">✉️ Message Owner</button>`:""}
+        ${currentUser&&pet.reporterUid!==currentUser.uid?`<button class="act-btn" style="background:#0EA5E9;color:white;" onclick="openDMWithOwner('${pet.id}')">✉️ Message Owner</button><button class="act-btn" style="background:#7C3AED;color:white;" onclick="watchPet('${pet.id}','${pet.name||"this pet"}')">🔔 Watch for updates</button>`:""}
         <button class="act-btn act-tg" onclick="shareTelegram('${pet.id}')">✈️ Share on Telegram</button>
         <button class="act-btn act-wa-share" onclick="shareWhatsApp('${pet.id}')">💬 Share on WhatsApp</button>
+        <button class="act-btn" style="background:#6B7280;color:white;" onclick="copyPetLink('${pet.id}')">🔗 Copy Link</button>
         <button class="act-btn" style="background:#374151;color:white;" onclick="openPetQr('${pet.id}')">📋 Lost Pet Poster &amp; QR</button>
         ${currentUser?`
           ${(pet.status==='found'||pet.status==='stray')?`<button class="act-btn" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;" onclick="closeModal('detailOverlay');openStandaloneAIMatch()">🤖 AI match — does this match a missing pet?</button>`:''}
@@ -2802,7 +2891,15 @@ window.markHome=async function(petId){
     await db.collection("stats").doc("global").set({reunited:firebase.firestore.FieldValue.increment(1)},{merge:true});
     await db.collection("stats").doc(commKey).set({reunited:firebase.firestore.FieldValue.increment(1),community:pet?.community||currentCommunity},{merge:true});
     await loadReunionStats();closeModal("detailOverlay");showToast("🏠 Marked as Back Home! Reunited counter updated.");
-    if(pet) setTimeout(()=>sendTelegramAlert({...pet,status:'home'}),700);
+    if(pet) {
+      setTimeout(async ()=>{
+        try {
+          const fresh = await db.collection('pets').doc(id).get();
+          const freshData = fresh.exists() ? {...pet,...fresh.data(),status:'home',id} : {...pet,status:'home'};
+          sendTelegramAlert(freshData);
+        } catch(e) { sendTelegramAlert({...pet,status:'home'}); }
+      }, 700);
+    }
   }catch(err){showToast("Error: "+err.message);}
 };
 window.delPet=async function(petId){if(!confirm("Delete this report permanently?"))return;try{await db.collection("pets").doc(petId).delete();closeModal("detailOverlay");showToast("Report deleted.");}catch(err){showToast("Error: "+err.message);}};
@@ -2979,8 +3076,10 @@ window.approveFeatured=async function(petId){
 
 
 window.onMembershipPaymentDone=async function(){
+  const btn = document.querySelector('#wioQrModal .qr-done-btn');
+  if(btn){ btn.textContent="⏳ Sending notification…"; btn.disabled=true; }
   closeModal("wioQrModal");
-  showToast("✅ Thank you! Notifying the admin to activate your account.");
+  showToast("✅ Thank you! Admin has been notified — account activates within a few hours.");
 
   const name  = currentUser?.displayName || currentUser?.email || "A new user";
   const email = currentUser?.email || "—";
@@ -3065,6 +3164,45 @@ window.doSignUp=async function(){
     }
   }catch(err){const m={"auth/email-already-in-use":"That email is already registered — try signing in.","auth/weak-password":"Use a stronger password.","auth/invalid-email":"Please enter a valid email address."};showToast(m[err.code]||err.message);}
 };
+
+// ── GOOGLE SIGN-IN ───────────────────────────────────────────────────────────
+window.doGoogleSignIn = async function() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    const isNewUser = result.additionalUserInfo && result.additionalUserInfo.isNewUser;
+    closeModal('authOverlay');
+    if (isNewUser) {
+      // Create Firestore user doc for new Google users
+      await db.collection('users').doc(user.uid).set({
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        phone: '',
+        community: currentCommunity,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        paid: false,
+        telegramAlerts: true,
+        signInMethod: 'google'
+      }, { merge: true });
+      showToast(`Welcome, ${user.displayName || 'neighbour'}! 🐾`);
+      // Show payment modal for new Google users
+      setTimeout(() => openModal('wioQrModal'), 600);
+    } else {
+      showToast(`Welcome back, ${user.displayName || 'neighbour'}! 👋`);
+    }
+  } catch(err) {
+    if(err.code === 'auth/popup-closed-by-user') return; // user cancelled
+    if(err.code === 'auth/popup-blocked') {
+      showToast('Pop-up blocked — please allow pop-ups and try again');
+      return;
+    }
+    showToast(err.message || 'Google sign-in failed — try email instead');
+  }
+};
+
 window.doSignOut=async function(){
   stopNotifListener();
   await auth.signOut();
@@ -3120,7 +3258,7 @@ auth.onAuthStateChanged(async user=>{
           const c=COMMUNITIES[userComm];
           const zoomLevel=Math.max(c.zoom||15, 15);
           if(map) map.setView([c.lat,c.lng], zoomLevel, {animate:true});
-          renderMarkers();
+          if(!window.currentUserPaid && typeof injectDemoPets==="function") injectDemoPets(); else renderMarkers();
           buildCommDD();
           loadReunionStats();
           showToast(`📍 Showing ${userComm}`);
@@ -3139,6 +3277,7 @@ auth.onAuthStateChanged(async user=>{
   } else {
     window.currentUserPaid=false;
     updateAuthUI(null);
+    setTimeout(()=>{ if(typeof injectDemoPets==="function") injectDemoPets(); }, 800);
   }
   // BUG 15 FIX: updateTrialBadge called here, after paid status is confirmed.
   // The DOMContentLoaded setTimeout version fired too early (before auth resolved).
@@ -3150,11 +3289,20 @@ auth.onAuthStateChanged(async user=>{
 
 
 
+
+// Show/hide the "Mine" sidebar tab depending on auth state
+function updateMineSidebarTab(user) {
+  const mineBtn = document.getElementById('sb-mine-btn');
+  if(!mineBtn) return;
+  mineBtn.style.display = (user && window.currentUserPaid) ? '' : 'none';
+}
+
 function updateAuthUI(user){
+  updateMineSidebarTab(user);
   const el=document.getElementById("auth-actions");
   if(user){
     const init=(user.displayName||user.email)[0].toUpperCase();
-    const unpaidBadge=!window.currentUserPaid?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:50px;font-weight:900;">Pay now</span>`:"";
+    const unpaidBadge=!window.currentUserPaid?`<span style="font-size:9px;background:var(--brand);color:white;padding:2px 7px;border-radius:50px;font-weight:900;animation:pulse 2s infinite;">Activate →</span>`:"";
     el.innerHTML=`<div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu(event)">
         <div class="user-av">${init}</div>
         <span class="user-name-text">${user.displayName||user.email.split("@")[0]}</span>
@@ -3167,6 +3315,7 @@ function updateAuthUI(user){
     menu.innerHTML=`
       ${window.currentUserPaid?`<div class="um-item" onclick="closeUserMenu();openModal('featuredModal')">⭐ Feature a pet</div><hr class="um-sep">`:""}
       ${user.email===ADMIN_EMAIL?`<div class="um-item" onclick="closeUserMenu();openAdmin()">⚙ Admin Dashboard</div><hr class="um-sep">`:""}
+      <div class="um-item" onclick="closeUserMenu();shareApp()">📣 Share Pause4Paws</div><hr class="um-sep">
       ${!window.currentUserPaid?`<div class="um-item" style="color:var(--brand);font-weight:800;" onclick="closeUserMenu();openModal('wioQrModal')">💳 Complete payment</div><hr class="um-sep">`:""}
       <div class="um-item" onclick="closeUserMenu();doSignOut()">Sign out</div>`;
   }else{
@@ -3462,7 +3611,13 @@ function startCountdown(){
   const deadline=new Date("2026-05-30T23:59:59");
   function tick(){
     const now=new Date(),diff=deadline-now;
-    if(diff<=0){document.getElementById("cd-days").textContent="00";return;}
+    if(diff<=0){
+      // Deadline passed: hide timer, update CTA to standard price
+      ["cd-days","cd-hours","cd-mins","cd-secs"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent="00";});
+      const priceNote=document.querySelector(".cd-price-note");
+      if(priceNote)priceNote.textContent="Membership: 38 AED · Lifetime";
+      return;
+    }
     const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
     document.getElementById("cd-days").textContent=String(d).padStart(2,"0");
     document.getElementById("cd-hours").textContent=String(h).padStart(2,"0");
@@ -4014,6 +4169,32 @@ window.runAIFromStandalonePhoto = function(input){
 
 
 // ── TELEGRAM SHARE (replaces WA share) ────────────────────────────────────
+
+// ── WATCH PET (subscribe to updates on a specific pet) ───────────────────────
+window.watchPet = async function(petId, petName) {
+  if(!currentUser) { openModal('authOverlay'); return; }
+  try {
+    await db.collection('users').doc(currentUser.uid).update({
+      watchedPets: firebase.firestore.FieldValue.arrayUnion(petId)
+    });
+    showToast(`🔔 You'll be notified of updates on ${petName}`);
+  } catch(e) {
+    showToast("Could not set watch — try again");
+  }
+};
+
+window.copyPetLink = function(petId) {
+  const url = `https://pause4paws.github.io/pause4paws/?pet=${petId}`;
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(()=>showToast("🔗 Link copied to clipboard!"));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast("🔗 Link copied!");
+  }
+};
+
 window.shareTelegram = function(petId) {
   const pet = allPets.find(p => p.id === petId);
   if (!pet) return;
@@ -4875,6 +5056,98 @@ function maybePromptForNotifications() {
   setTimeout(() => { if(n.parentNode) n.remove(); }, 15000);
 }
 
+
+// ── MICROCHIP LOOKUP ─────────────────────────────────────────────────────────
+window.toggleChipLookup = function(val) {
+  const btn = document.getElementById('chip-lookup-btn');
+  if(btn) btn.style.display = val && val.length >= 9 ? '' : 'none';
+};
+
+window.openChipLookup = function() {
+  const chip = document.getElementById('r-microchip')?.value?.trim();
+  if(!chip) return;
+  // Open UAE-relevant pet microchip registries in a small modal
+  const html = `
+    <div style="padding:1rem;">
+      <div style="font-weight:900;font-size:15px;margin-bottom:.5rem;">🔍 Microchip lookup</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:1rem;line-height:1.6;">Search these UAE-relevant registries for chip <strong style="font-family:monospace;">${chip}</strong>:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="https://www.petmaxx.com/pet-lookup?microchipnumber=${chip}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border2);text-decoration:none;color:var(--ink);background:white;font-size:13px;font-weight:800;">
+          <span style="font-size:20px;">🌍</span><div><div>PetMaxx International</div><div style="font-size:10px;color:var(--muted);font-weight:600;">Global ISO chip database — most UAE chips registered here</div></div>
+        </a>
+        <a href="https://www.petlog.org.uk/?microchip=${chip}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border2);text-decoration:none;color:var(--ink);background:white;font-size:13px;font-weight:800;">
+          <span style="font-size:20px;">🐾</span><div><div>Petlog UK</div><div style="font-size:10px;color:var(--muted);font-weight:600;">Popular with UK expats — covers 900+ ISO databases</div></div>
+        </a>
+        <a href="https://www.emiratespetrescue.org/" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border2);text-decoration:none;color:var(--ink);background:white;font-size:13px;font-weight:800;">
+          <span style="font-size:20px;">🇦🇪</span><div><div>Emirates Pet Rescue</div><div style="font-size:10px;color:var(--muted);font-weight:600;">Contact for UAE-registered chips & vet support</div></div>
+        </a>
+        <a href="https://dha.gov.ae/en/Pages/Services.aspx" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border2);text-decoration:none;color:var(--ink);background:white;font-size:13px;font-weight:800;">
+          <span style="font-size:20px;">🏛</span><div><div>Dubai Municipality Animal Services</div><div style="font-size:10px;color:var(--muted);font-weight:600;">For municipally registered chips — call +971 4 221 5555</div></div>
+        </a>
+      </div>
+      <div style="margin-top:1rem;font-size:11px;color:var(--muted);line-height:1.6;">💡 Tip: Your vet can also scan and look up any microchip in the UAE. If the animal is with you, take them to the nearest vet — it's usually free to scan.</div>
+      <button onclick="document.getElementById('chipLookupModal').classList.add('hidden')" style="width:100%;margin-top:12px;padding:10px;border-radius:9px;border:none;background:var(--brand);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">Close</button>
+    </div>`;
+  let modal = document.getElementById('chipLookupModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'chipLookupModal';
+    modal.className = 'overlay';
+    modal.style.cssText = 'z-index:20000;';
+    modal.innerHTML = `<div class="modal" style="max-width:400px;">${html}</div>`;
+    modal.addEventListener('click', e => { if(e.target===modal) modal.classList.add('hidden'); });
+    document.body.appendChild(modal);
+  } else {
+    modal.querySelector('.modal').innerHTML = html;
+    modal.classList.remove('hidden');
+  }
+};
+
+
+// ── NOTIFY PET OWNER OF SIGHTING ─────────────────────────────────────────────
+// When someone logs a sighting linked to a specific missing pet,
+// this fires: in-app notification + Telegram admin ping + in-app feed entry
+async function notifyPetOwnerOfSighting(pet, petId, loc, desc, reporter) {
+  try {
+    const ownerUid = pet.reporterUid;
+    if(!ownerUid || ownerUid === reporter.uid) return; // don't notify yourself
+
+    const reporterName = reporter.displayName || reporter.email?.split('@')[0] || 'A neighbour';
+    const petName = pet.name || 'your pet';
+    const locStr = loc ? `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}` : 'nearby';
+
+    // 1. Write in-app notification for the owner
+    await db.collection('notifications').doc(ownerUid).collection('items').add({
+      type: 'sighting',
+      petId,
+      petName,
+      message: `📍 ${reporterName} spotted ${petName}${desc ? ': "'+desc.substring(0,60)+(desc.length>60?'…':'')+'"' : ' near you'}`,
+      read: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 2. Send Telegram alert to admin so they can forward to owner if needed
+    const tgMsg = `👁 <b>SIGHTING LOGGED</b>\n\n` +
+      `🐾 <b>${petName}</b> was spotted!\n` +
+      `📍 Location: ${locStr}\n` +
+      (desc ? `💬 "${desc.substring(0,100)}"\n` : '') +
+      `👤 Spotted by: ${reporterName}\n\n` +
+      `🔗 <a href="https://pause4paws.github.io/pause4paws/?pet=${petId}">View on map →</a>`;
+    sendTelegramToAdmin(tgMsg);
+
+    // 3. Also post to the public Telegram channel so the community knows
+    const publicMsg = `👁 <b>SIGHTING REPORTED — ${pet.community || 'Dubai'}</b>\n\n` +
+      `A <b>${pet.species || 'pet'}</b> matching <b>${petName}</b> was spotted nearby.\n` +
+      (desc ? `💬 "${desc.substring(0,80)}"\n` : '') +
+      `\n🔔 Owner has been notified. If you have more info, open the app.\n` +
+      `🔗 <a href="https://pause4paws.github.io/pause4paws/?pet=${petId}">View on Pause4Paws →</a>`;
+    sendTelegramMessage(publicMsg);
+
+  } catch(e) {
+    console.warn('[Sighting notify] Error:', e.message);
+  }
+}
+
 // ══ TELEGRAM BOT ══════════════════════════════════════════════════════════════
 const TELEGRAM_BOT_TOKEN  = "8663016273:AAELbuG-Ev0o5tJMW5iWIkeQ79HJxygkcaw";
 const TELEGRAM_CHAT_ID    = "@pause4paws_ae";   // public channel — pet alerts & digests
@@ -4891,6 +5164,8 @@ async function sendTelegramToAdmin(text) {
 }
 
 async function sendTelegramAlert(pet) {
+  // Skip demo pets entirely
+  if(pet._demo || (pet.id||"").startsWith("__demo")) return;
   const caption = buildTelegramCaption(pet);
   try {
     if (pet.photoURL) {
@@ -4901,15 +5176,20 @@ async function sendTelegramAlert(pet) {
       );
       const r = await resp.json();
       if (!r.ok) {
-        console.warn('[Telegram] sendPhoto failed:', r.description);
-        await sendTelegramMessage(caption);
+        console.warn('[Telegram] sendPhoto failed:', r.description, '— falling back to text');
+        await sendTelegramMessage(caption + '\n\n📸 (photo uploading — view on app)');
+        if(currentUser && currentUser.email===ADMIN_EMAIL) showToast('⚠️ Telegram photo failed — text sent');
       } else {
-        console.log('[Telegram] ✓ Photo posted');
+        console.log('[Telegram] ✓ Photo alert posted for', pet.name||pet.status);
       }
     } else {
       await sendTelegramMessage(caption);
+      console.log('[Telegram] ✓ Text alert posted for', pet.name||pet.status);
     }
-  } catch(err) { console.warn('[Telegram] Error:', err.message); }
+  } catch(err) {
+    console.warn('[Telegram] Network error:', err.message);
+    if(currentUser && currentUser.email===ADMIN_EMAIL) showToast('⚠️ Telegram alert failed — check connection');
+  }
 }
 
 async function sendTelegramMessage(text) {
@@ -5027,6 +5307,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("r-date").value=new Date().toISOString().split("T")[0];
   window.pickType("lost");window.switchTab("signin");
   startCountdown();
+  // Show countdown to non-logged-in users who haven't dismissed it
+  if(!localStorage.getItem('p4p_cd_dismissed')) {
+    setTimeout(() => {
+      if(!currentUser) {
+        document.getElementById('countdownOverlay').classList.remove('hidden');
+      }
+    }, 5000); // Show after 5s so map loads first
+  }
   // Show welcome screen on first visit
   if(!localStorage.getItem("p4p_welcomed")){
     document.getElementById("welcomeScreen").classList.remove("hidden");
@@ -5557,6 +5845,19 @@ window.toggleVetLayer = function() {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+
+// ── SHARE APP ────────────────────────────────────────────────────────────────
+window.shareApp = function() {
+  const text = "🐾 Pause4Paws — Dubai's community pet tracker! Report missing pets, log sightings, use AI matching. 38 AED lifetime membership. Join now:";
+  const url = "https://pause4paws.github.io/pause4paws/";
+  if(navigator.share) {
+    navigator.share({ title: "Pause4Paws", text, url }).catch(()=>{});
+  } else {
+    const wa = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+    window.open(wa, "_blank");
+  }
+};
+
 // 🌅 IN-APP 6AM / 6PM DIGEST BANNER
 // Shows an in-app banner at 6am and 6pm with the community's missing pet count
 // ══════════════════════════════════════════════════════════════════════════════
